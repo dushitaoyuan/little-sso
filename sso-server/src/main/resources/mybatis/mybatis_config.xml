@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <typeAliases>
+        <typeAlias alias="Encode" type="com.ncs.pm.commons.mybatis.encrypt.Encode"/><!--敏感字段类型  -->
+        <package name="com.ncs.pm.DO"/>
+    </typeAliases>
+
+    <typeHandlers>
+       <!-- 数据字段加解密处理,使用方式,参见类注释-->
+        <typeHandler handler="com.ncs.pm.commons.mybatis.encrypt.EncodeAliasTypeHandlerextends" javaType="Encode" jdbcType="VARCHAR"/>
+    </typeHandlers>
+
+
+</configuration>

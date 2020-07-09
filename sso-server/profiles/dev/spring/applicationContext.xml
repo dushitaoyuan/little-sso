@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+			http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.1.xsd">
+
+
+    <context:property-placeholder location="classpath:application.properties"/>
+    <bean class="com.ncs.pm.commons.utils.SpringContextUtil">
+        <property name="configLocatioin" value="classpath:application.properties"/>
+        <property name="workNodeId" value="1"/>
+        <property name="dataCenterId" value="1"/>
+    </bean>
+
+    <context:component-scan base-package="com.ncs.sso.server">
+        <context:exclude-filter type="regex" expression="com.ncs.sso.server.web.controller.*"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
+    </context:component-scan>
+
+
+    <!-- 配置数据库连接池 -->
+
+    <bean id="dataSource" parent="abstractDataSource">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+        <property name="initialSize" value="${jdbc.initialSize}"/>
+    </bean>
+
+    <bean id="abstractDataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          destroy-method="close">
+        <property name="filters" value="stat,wall"/>
+        <property name="maxWait" value="60000"/>
+        <property name="minIdle" value="5"/>
+        <property name="timeBetweenEvictionRunsMillis" value="18000"/>
+        <property name="minEvictableIdleTimeMillis" value="60000"/>
+        <property name="validationQuery" value="SELECT 1"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="poolPreparedStatements" value="true"/>
+        <property name="maxOpenPreparedStatements" value="20"/>
+        <property name="asyncInit" value="true"/>
+    </bean>
+    <!--mybatis -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.ncs.sso.server.dao"/>
+    </bean>
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"/>
+        <property name="configLocation" value="classpath:mybatis/mybatis_config.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+        <!-- <property name="plugins">
+             <array>
+                 <bean class="com.github.pagehelper.PageHelper">
+                     <property name="properties">
+                         <value>
+                             helperDialect=mysql
+                             reasonable=false
+                             supportMethodsArguments=true
+                             params=count=countSql
+                         </value>
+                     </property>
+                 </bean>
+             </array>
+         </property>-->
+    </bean>
+
+
+    <!--jdbc 事务模板 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+
+        <property name="transactionManager" ref="transactionManager"/>
+    </bean>
+
+    <!-- 任务注解 -->
+    <task:annotation-driven/>
+    <!-- 日志线程池 -->
+    <task:executor id="logThreadPool" pool-size="4"/>
+    <import resource="applicationContext-redis.xml"/>
+</beans>
