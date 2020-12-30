@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="Thymeleaf"
+
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>登录页面</title>
+    <link rel="stylesheet" href="/js/layui/css/layui.css">
+
+</head>
+
+<body>
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>登录页面</legend>
+</fieldset>
+<form class="layui-form" action="" lay-filter="loginForm">
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" lay-verify="required" lay-reqtext="用户名是必填项" autocomplete="off"
+                   placeholder="请输入用户名"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+            <input type="password" name="password" lay-verify="required" lay-reqtext="密码是必填项" autocomplete="off"
+                   placeholder="请输入用户名"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <input type="checkbox" name="rememberMe" value="true" title="记住我">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="loginFormSubmit">登录</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<script src="/js/layui/layui.all.js"></script>
+<script type="text/javascript" src="/js/crypto-js/crypto-js.js"></script>
+<script type="text/javascript" src="/js/crypto-js/md5.js"></script>
+<script type="text/javascript" src="/js/crypto-js/enc-hex.js"></script>
+<script type="text/javascript">
+    form = layui.form;
+    $ = layui.jquery;
+    form.on('submit(loginFormSubmit)', function (data) {
+        var loginFormData = data.field;
+        loginFormData.password = CryptoJS.MD5(loginFormData.password).toString(CryptoJS.enc.Hex)
+        $.ajax({
+            method: "post",
+            url: "/sso/login",
+            data: loginFormData,
+            dataType:'json',
+            success: function (result) {
+                if (result.success == 1) {
+                    layer.msg('登录成功!', function () {
+                        setTimeout(function () {
+                            window.location.href = '/index';
+                        }, 200);
+                    })
+                } else {
+                    layer.msg(result.msg);
+                }
+
+            },
+            error: function (xhr) {
+                layer.msg(xhr.msg);
+            }
+        })
+        return false;
+    });
+
+
+</script>
+</body>
+
+</html>
