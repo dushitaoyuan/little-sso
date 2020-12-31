@@ -4,6 +4,7 @@ package com.taoyuanx.sso.config;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
 import com.taoyuanx.sso.core.exception.SSOException;
+import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import com.taoyuanx.sso.core.utils.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +70,8 @@ public class MvcConfig implements WebMvcConfigurer, ResponseBodyAdvice<Object> {
         if (responseStatus != null) {
             httpStatus = responseStatus.code().value();
         }
-        if (e instanceof SSOException) {
-            httpStatus = 500;
+        if (e instanceof SSOException || e instanceof SessionIdInvalidException) {
+            httpStatus = 200;
         } else {
             log.error("系统异常", e);
             msg = "系统异常";

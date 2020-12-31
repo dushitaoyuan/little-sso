@@ -3,8 +3,9 @@ package com.taoyuanx.sso.controller;
 import com.taoyuanx.sso.config.SSOProperties;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
-import com.taoyuanx.sso.core.session.SessionHelper;
+import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
+import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.RequestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 /**
  * @author dushitaoyuan
@@ -26,25 +28,31 @@ import javax.servlet.http.HttpServletResponse;
 
 public class SSOApiController {
     @Autowired
-    SessionHelper sessionHelper;
-
+    SessionManager sessionManager;
     @Autowired
     SessionIdGenerate sessionIdGenerate;
     @Autowired
     SSOProperties ssoProperties;
 
     @GetMapping("loginCheck")
-    public void loginCheck(HttpServletRequest request, HttpServletResponse response) {
+    public Result loginCheck(HttpServletRequest request, HttpServletResponse response) {
         String sessionId = RequestUtil.getValue(request, ssoProperties.getSessionKeyName());
-        if (!sessionHelper.isLogin(sessionId)) {
-            response.setStatus(500);
+        if (Objects.isNull(sessionId)) {
+            throw new SessionIdInvalidException();
         }
+        if (!sessionManager.isLogin(sessionId)) {
+            return ResultBuilder.failed("未登录");
+        }
+        return ResultBuilder.success();
     }
 
     @GetMapping("info")
     public Result getSSOUser(HttpServletRequest request, HttpServletResponse response) {
         String sessionId = RequestUtil.getValue(request, ssoProperties.getSessionKeyName());
-        return ResultBuilder.success(sessionHelper.getSSOUser(sessionId));
+        if (Objects.isNull(sessionId)) {
+            throw new SessionIdInvalidException();
+        }
+        return ResultBuilder.success(sessionManager.getSSOUser(sessionId));
     }
 
     @GetMapping

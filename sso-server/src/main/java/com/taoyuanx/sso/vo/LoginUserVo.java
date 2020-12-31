@@ -1,5 +1,6 @@
 package com.taoyuanx.sso.vo;
 
+import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.entity.UserEntity;
 import lombok.Data;
 
@@ -11,10 +12,9 @@ import java.io.Serializable;
  * @date 2020/12/30
  */
 @Data
-public class LoginUserVo implements Serializable {
+public class LoginUserVo extends SSOUser {
     private UserEntity userEntity;
 
     private String redirectUrl;
 
-    private String sessionId;
 }

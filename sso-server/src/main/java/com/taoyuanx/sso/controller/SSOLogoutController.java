@@ -1,12 +1,11 @@
 package com.taoyuanx.sso.controller;
 
 import com.taoyuanx.sso.config.SSOProperties;
-import com.taoyuanx.sso.core.consts.SSOConst;
-import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
-import com.taoyuanx.sso.core.exception.SSOException;
-import com.taoyuanx.sso.core.session.SessionHelper;
+import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
+import com.taoyuanx.sso.core.session.SessionManager;
+import com.taoyuanx.sso.core.utils.CookieUtil;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import com.taoyuanx.sso.core.utils.RequestUtil;
 import com.taoyuanx.sso.core.utils.ResponseUtil;
@@ -21,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author dushitaoyuan
@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class SSOLogoutController {
     @Autowired
-    SessionHelper sessionHelper;
+    SessionManager sessionManager;
 
     @Autowired
     SessionIdGenerate sessionIdGenerate;
@@ -44,14 +44,19 @@ public class SSOLogoutController {
     @GetMapping
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String sessionId = RequestUtil.getValue(request, ssoProperties.getSessionKeyName());
+        if (Objects.isNull(sessionId)) {
+
+            throw new SessionIdInvalidException();
+        }
         sessionIdGenerate.isSessionIdValid(sessionId);
-        sessionHelper.logout(sessionId);
+        sessionManager.logout(sessionId);
         handleResponse(request, response);
 
     }
 
     private void handleResponse(HttpServletRequest request, HttpServletResponse response) {
         try {
+            CookieUtil.deleteCookieValue(request, response, ssoProperties.getSessionKeyName());
             if (ResponseUtil.isAcceptJson(request)) {
                 ResponseUtil.responseJson(response, JSONUtil.toJsonString(ResultBuilder.success()), 200);
             } else {

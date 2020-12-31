@@ -22,6 +22,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label">用户名</label>
         <div class="layui-input-block">
+            <input type="hidden" name="redirectUrl" th:value="${redirectUrl}">
             <input type="text" name="username" lay-verify="required" lay-reqtext="用户名是必填项" autocomplete="off"
                    placeholder="请输入用户名"
                    class="layui-input">
@@ -33,11 +34,6 @@
             <input type="password" name="password" lay-verify="required" lay-reqtext="密码是必填项" autocomplete="off"
                    placeholder="请输入用户名"
                    class="layui-input">
-        </div>
-    </div>
-    <div class="layui-form-item">
-        <div class="layui-input-block">
-            <input type="checkbox" name="rememberMe" value="true" title="记住我">
         </div>
     </div>
     <div class="layui-form-item">

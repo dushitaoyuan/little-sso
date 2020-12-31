@@ -3,10 +3,9 @@ package com.taoyuanx.sso.controller;
 import com.taoyuanx.sso.config.SSOProperties;
 import com.taoyuanx.sso.core.consts.SSOConst;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
-import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.core.exception.SSOException;
-import com.taoyuanx.sso.core.session.SessionHelper;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
+import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.CookieUtil;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import com.taoyuanx.sso.core.utils.RequestUtil;
@@ -40,13 +39,12 @@ public class SSOLoginController {
     @Autowired
     UserService userService;
     @Autowired
-    SessionHelper sessionHelper;
+    SessionManager sessionManager;
 
     @Autowired
     SessionIdGenerate sessionIdGenerate;
     @Autowired
     SSOProperties ssoProperties;
-
 
 
     @PostMapping
@@ -80,17 +78,24 @@ public class SSOLoginController {
      */
     private void successLogin(LoginUserVo loginUserVo, HttpServletRequest request, HttpServletResponse response) {
         try {
-            String sessionId = sessionIdGenerate.generate(String.valueOf(loginUserVo.getUserEntity().getId()));
+            String userId = String.valueOf(loginUserVo.getUserEntity().getId());
+            String sessionId = sessionIdGenerate.generate(userId);
             loginUserVo.setSessionId(sessionId);
+            loginUserVo.setUserId(userId);
+            String sessionKeyName = ssoProperties.getSessionKeyName();
+            sessionManager.createSession(loginUserVo);
             if (ResponseUtil.isAcceptJson(request)) {
                 Map map = new HashMap<>();
                 map.put("redirectUrl", loginUserVo.getRedirectUrl());
-                map.put("sessionId", sessionId);
-
+                map.put(sessionKeyName, sessionId);
                 ResponseUtil.responseJson(response, JSONUtil.toJsonString(ResultBuilder.success(map)), 200);
             } else {
                 response.sendRedirect(loginUserVo.getRedirectUrl());
             }
+            /**
+             * header 和 cookie 都设置
+             */
+            response.addHeader(sessionKeyName, sessionId);
             CookieUtil.addCookie(response, ssoProperties.getSessionKeyName(), sessionId, ssoProperties.getSessionIdCookieDomain(), null);
         } catch (Exception e) {
             throw new RuntimeException(e);

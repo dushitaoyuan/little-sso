@@ -5,8 +5,11 @@ import com.taoyuanx.sso.core.dto.SSOUser;
 /**
  * @author dushitaoyuan
  * @date 2020/12/29
+ * session 管理接口
  */
-public interface SessionHelper {
+public interface SessionManager {
+
+    void createSession(SSOUser ssoUser);
 
     boolean isLogin(String sessionId);
 

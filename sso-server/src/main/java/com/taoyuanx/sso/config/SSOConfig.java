@@ -1,13 +1,11 @@
 package com.taoyuanx.sso.config;
 
-import com.taoyuanx.sso.core.bean.SSOBeanProvider;
-import com.taoyuanx.sso.core.session.SessionHelper;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
+import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.session.impl.DefaultSignSessionIdGenerate;
 import com.taoyuanx.sso.core.token.sign.impl.HMacSign;
 import com.taoyuanx.sso.session.impl.RedisSessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -29,7 +27,7 @@ public class SSOConfig {
     }
 
     @Bean
-    public SessionHelper sessionHelper(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate) {
+    public SessionManager sessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate) {
         return new RedisSessionManager(redisTemplate, sessionIdGenerate, ssoProperties.getSessionTimeOut() * 60L / 2, ssoProperties.getSessionTimeOut() * 60L / 2);
     }
 }

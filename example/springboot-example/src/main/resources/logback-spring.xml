@@ -2,7 +2,7 @@
 
 <configuration scan="true" scanPeriod="10 seconds">
     <springProperty name="LOG_HOME" source="logging.file.path" defaultValue="./logs"/>
-    <property name="LOG_PREFIX" value="ssoServer"/>
+    <property name="LOG_PREFIX" value="app1"/>
 
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
     <conversionRule conversionWord="wex"

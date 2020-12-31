@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.taoyuanx.sso.client.core.Result;
 import com.taoyuanx.sso.client.core.SSOClientConfig;
 import com.taoyuanx.sso.client.core.SSOClientConstant;
+import com.taoyuanx.sso.client.core.sign.sign.impl.HMacVerifySign;
 import com.taoyuanx.sso.client.ex.SSOClientException;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOClientImpl;
@@ -21,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author dushitaoyuan
@@ -42,21 +44,30 @@ public class SSOFilter implements Filter {
 
     }
 
+    public SSOFilter(SSOClientConfig ssoClientConfig, SSOClient ssoClient) {
+        this.ssoClientConfig = ssoClientConfig;
+        this.ssoClient = ssoClient;
+    }
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        log.debug("---in filter");
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String method = request.getMethod();
         String requestURI = request.getRequestURI();
         String sessionId = getSessionId(request);
         /**
-         * logut url
+         *  when  ssoUrl ， clientLogoutPath ，clientLogoutPath is config
+         *   visit loginPath redirect to sso loginUrl
+         *   visit logoutPath logout from ssoServer then  redirect to sso loginUrl
+         *   or sso-app handle login or logout logic
          */
-        if (isLogout(requestURI, method)) {
+        if (matchLogout(requestURI, method)) {
             try {
                 ssoClient.isSessionIdValid(sessionId);
                 ssoClient.logout(sessionId);
-                response.sendRedirect(ssoClientConfig.getClientLoginUrl());
+                toLogin(request, response);
             } catch (SSOClientException e) {
                 /**
                  * delete cookie
@@ -65,6 +76,10 @@ public class SSOFilter implements Filter {
                 log.error("check session failed", e);
                 toLogin(request, response);
             }
+            return;
+        }
+        if (matchLogin(requestURI)) {
+            toLogin(request, response);
             return;
         }
         /**
@@ -78,6 +93,8 @@ public class SSOFilter implements Filter {
                 if (!ssoClient.loginCheck(sessionId)) {
                     throw new SSOClientException("sessionId[" + sessionId + "] is invalid");
                 }
+                request.setAttribute(SSOClientConstant.SESSION_KEY_NAME, sessionId);
+                return;
             } catch (SSOClientException e) {
                 log.error("check login failed", e);
                 /**
@@ -89,6 +106,7 @@ public class SSOFilter implements Filter {
             }
         }
         filterChain.doFilter(request, response);
+        log.debug("---after filter");
     }
 
     private boolean isPathFilter(String requestURI) {
@@ -110,14 +128,18 @@ public class SSOFilter implements Filter {
         return false;
     }
 
-    private boolean isLogout(String requestURI, String method) {
-        if (antPathMatcher.match(ssoClientConfig.getClientLogoutUrl(), requestURI)) {
+    private boolean matchLogout(String requestURI, String method) {
+
+        if (Objects.nonNull(ssoClientConfig.getClientLogoutPath()) && antPathMatcher.match(ssoClientConfig.getClientLogoutPath(), requestURI)) {
             String clientLogoutMethod = ssoClientConfig.getClientLogoutMethod();
             return StrUtil.isEmpty(clientLogoutMethod) || method.equalsIgnoreCase(clientLogoutMethod);
         }
         return false;
     }
 
+    private boolean matchLogin(String requestURI) {
+        return Objects.nonNull(ssoClientConfig.getClientLoginPath()) && antPathMatcher.match(ssoClientConfig.getClientLoginPath(), requestURI);
+    }
 
     private String getSessionId(HttpServletRequest request) {
         String sessionKeyName = ssoClientConfig.getSessionKeyName();
@@ -138,23 +160,33 @@ public class SSOFilter implements Filter {
         if (ResponseUtil.isAcceptJson(request)) {
             Result result = new Result();
             result.setCode(SSOClientConstant.NOT_LOGIN_ERROR_CODE);
-            result.setMsg("未登录,请先登录");
             ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
         } else {
-            response.sendRedirect(ssoClientConfig.getClientLoginUrl());
+            String loginUrl = ssoClientConfig.getSsoLoginUrl();
+            if (!loginUrl.endsWith("?")) {
+                loginUrl += "?";
+            }
+            loginUrl += "&" + SSOClientConstant.redirectUrl + "=" + ssoClientConfig.getRedirectUrl();
+
+            response.sendRedirect(loginUrl);
         }
     }
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        String configPath = filterConfig.getInitParameter(SSOClientConstant.SSO_CLIENT_CONFIG_NAME);
-        if (StrUtil.isNotEmpty(configPath)) {
-            ssoClientConfig = new SSOClientConfig(configPath);
-        } else {
-            ssoClientConfig = new SSOClientConfig();
+        if (Objects.nonNull(ssoClientConfig)) {
+            String configPath = filterConfig.getInitParameter(SSOClientConstant.SSO_CLIENT_CONFIG_NAME);
+            if (StrUtil.isNotEmpty(configPath)) {
+                ssoClientConfig = new SSOClientConfig(configPath);
+            } else {
+                ssoClientConfig = new SSOClientConfig();
+            }
+
         }
-        ssoClient = new SSOClientImpl(ssoClientConfig);
-
-
+        if (Objects.nonNull(ssoClient)) {
+            ssoClient = new SSOClientImpl(ssoClientConfig, new HMacVerifySign(ssoClientConfig.getSessionIdSignHmacKey().getBytes()));
+        }
     }
+
+
 }

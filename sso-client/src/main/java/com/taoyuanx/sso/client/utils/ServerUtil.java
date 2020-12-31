@@ -12,29 +12,10 @@ import okhttp3.Request;
  */
 @Slf4j
 public class ServerUtil {
-    /**
-     * 判断file server是否存活
-     */
-    public static boolean checkServerAlive(SSOServer server, SSOClientConfig clientConfig) {
-        if (server.isAlive()) {
-            return true;
-        }
-        synchronized (server) {
-            if (!server.isAlive()) {
-                try {
-                    OkHttpUtil.request(clientConfig.getOkHttpClient(), new Request.Builder()
-                            .url(server.getServerUrl() + SSOServerApi.HELLO.path).get().build(), null);
-                    server.alive(true);
-                    return true;
-                } catch (Exception e) {
-                    server.alive(false);
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 
+    /**
+     * 只心跳notalive的server,当server上线时自动加入到负载列表
+     */
     public static void heartBeatCheck(SSOClientConfig clientConfig) {
         if (clientConfig.getServerList() == null) {
             return;
@@ -42,14 +23,23 @@ public class ServerUtil {
         clientConfig.getServerList().stream().filter(server -> {
             return !server.isAlive();
         }).forEach(server -> {
-            try {
-                OkHttpUtil.request(clientConfig.getOkHttpClient(), new Request.Builder()
-                        .url(server.getServerUrl() + SSOServerApi.HELLO.path).get().build(), null);
-                server.alive(true);
-            } catch (Exception e) {
-                log.warn("server ->{}, heart error", server.getServerUrl());
-            }
+            doCheck(server, clientConfig);
         });
 
     }
+
+    private static boolean doCheck(SSOServer server, SSOClientConfig clientConfig) {
+        try {
+            String url = server.getServerUrl() + SSOServerApi.HELLO.path;
+            OkHttpUtil.request(clientConfig.getOkHttpClient(), new Request.Builder()
+                    .url(url).get().build(), null);
+            server.alive(true);
+            return true;
+        } catch (Exception e) {
+            log.warn("server ->{}, heart error", server.getServerUrl());
+            server.alive(false);
+            return false;
+        }
+    }
+
 }

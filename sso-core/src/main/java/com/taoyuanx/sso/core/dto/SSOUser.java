@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * @author dushitaoyuan
- * @desc sso user
+ * @desc sso user   should be extend
  * @date 2020/12/29
  */
 @Setter
@@ -16,13 +16,10 @@ import java.util.Map;
 public class SSOUser implements Serializable {
 
     private String sessionId;
+    /**
+     * userId
+     */
+    private String userId;
 
-    private Map<String, String> dataInfo;
 
-    private Long createTime;
-
-
-    private String getData(String dataKey) {
-        return dataInfo.get(dataKey);
-    }
 }

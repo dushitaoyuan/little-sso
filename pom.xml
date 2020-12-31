@@ -21,6 +21,7 @@
         <module>sso-server</module>
         <module>sso-client</module>
         <module>sso-core</module>
+        <module>example</module>
     </modules>
 
     <dependencyManagement>

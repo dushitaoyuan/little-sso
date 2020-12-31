@@ -1,9 +1,12 @@
 package com.taoyuanx.sso.core.session.impl;
 
 import com.taoyuanx.sso.core.exception.SSOException;
+import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
 import com.taoyuanx.sso.core.token.TokenForamtUtil;
 import com.taoyuanx.sso.core.token.sign.ISign;
+
+import java.util.regex.Pattern;
 
 /**
  * @author dushitaoyuan
@@ -12,6 +15,8 @@ import com.taoyuanx.sso.core.token.sign.ISign;
  */
 public class DefaultSignSessionIdGenerate implements SessionIdGenerate {
     private ISign sign;
+
+    public Pattern sessionIdPattern = Pattern.compile(".*\\..*");
 
     public DefaultSignSessionIdGenerate(ISign sign) {
         this.sign = sign;
@@ -25,6 +30,9 @@ public class DefaultSignSessionIdGenerate implements SessionIdGenerate {
 
     @Override
     public String isSessionIdValid(String sessionId) {
+        if (!sessionIdPattern.matcher(sessionId).matches()) {
+            throw new SessionIdInvalidException();
+        }
         byte[][] dataAndSign = TokenForamtUtil.splitTokenToByte(sessionId);
         byte[] data = dataAndSign[TokenForamtUtil.DATA_INDEX];
         byte[] sign = dataAndSign[TokenForamtUtil.SING_INDEX];
@@ -33,4 +41,5 @@ public class DefaultSignSessionIdGenerate implements SessionIdGenerate {
         }
         return TokenForamtUtil.byteToString(data);
     }
+
 }

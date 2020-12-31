@@ -39,15 +39,14 @@ public class SSOClientInterceptor implements Interceptor {
         Request userRequest = chain.request();
         HttpUrl requestUrl = userRequest.url();
         String stringUrl = requestUrl.toString();
-        boolean needBase = Objects.nonNull(stringUrl) && stringUrl.startsWith(SSOClientConstant.SSO_CLIENT_BASE_URL);
-        SSOServer choseServer = null;
+        boolean needBase = clientConfig.isLoadbalanceEnable() && stringUrl.startsWith(SSOClientConstant.SSO_CLIENT_BASE_URL);
 
         if (needBase) {
             /**
              *   添加token,header
              */
             Request.Builder requestBuilder = userRequest.newBuilder();
-
+            SSOServer choseServer = null;
             /**
              * 替换base url
              */
@@ -73,7 +72,7 @@ public class SSOClientInterceptor implements Interceptor {
         try {
             return chain.proceed(userRequest);
         } catch (ConnectException e) {
-            log.warn("file server[{}] connect error", choseServer.getServerUrl());
+            log.warn("sso server[{}] connect error", choseServer.getServerUrl());
             /**
              * 连接失败 标记server 不可用
              */

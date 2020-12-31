@@ -28,10 +28,14 @@ public class OkHttpUtil {
                     return (T) temp;
                 } else {
                     Result result = JSON.parseObject(response.body().string(), Result.class);
-                    if (type.equals(String.class)) {
-                        return (T) result.getData();
+                    if (type.equals(Result.class)) {
+                        return (T) result;
                     }
-                    return JSON.parseObject(result.getData(), type);
+                    String data = result.getData();
+                    if (StrUtil.isNotEmpty(data)) {
+                        return JSON.parseObject(data, type);
+                    }
+                    throw new SSOClientException(StrUtil.log4jFormat("ssoServer 调用异常,异常结果:{}", JSON.toJSONString(result)));
                 }
             }
             throw new SSOClientException(StrUtil.log4jFormat("ssoServer 调用异常,异常结果:{}", response.body().string()));

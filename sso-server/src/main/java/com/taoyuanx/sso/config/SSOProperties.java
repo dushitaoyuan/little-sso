@@ -19,10 +19,7 @@ public class SSOProperties {
     private Integer sessionTimeOut;
 
     private String sessionIdSignHmacKey;
-    /**
-     * sessionId cookie名称及域名
-     */
-    private String sessionIdCookieName=SSOConst.SSO_SESSION_ID;
+
 
     private String sessionIdCookieDomain;
     /**

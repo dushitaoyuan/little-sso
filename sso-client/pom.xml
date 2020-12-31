@@ -18,6 +18,10 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
          <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -28,12 +32,7 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.28</version>
         </dependency>
-         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-        <scope>test</scope>
-        </dependency>
+
 
         <dependency>
             <groupId>org.slf4j</groupId>

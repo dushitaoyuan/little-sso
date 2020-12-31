@@ -1,8 +1,8 @@
 package com.taoyuanx.sso.client.impl.loadbalance;
 
 
-import com.taoyuanx.littlefile.client.impl.loadbalance.impl.RandomLoadbalance;
-import com.taoyuanx.littlefile.client.impl.loadbalance.impl.RoundLoadbalance;
+import com.taoyuanx.sso.client.impl.loadbalance.impl.RandomLoadbalance;
+import com.taoyuanx.sso.client.impl.loadbalance.impl.RoundLoadbalance;
 
 public enum LoadbalanceEnum {
     Random(new RandomLoadbalance(), "随机"),

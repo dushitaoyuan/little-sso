@@ -1,8 +1,8 @@
 package com.taoyuanx.sso.session.impl;
 
 import com.taoyuanx.sso.core.dto.SSOUser;
-import com.taoyuanx.sso.core.session.SessionHelper;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
+import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit;
  * @desc redis 会话管理
  * @date 2020/12/30
  */
-public class RedisSessionManager implements SessionHelper {
+public class RedisSessionManager implements SessionManager {
 
     private static final String REDIS_SESSION_NAMESPACE = "s:";
 
-    private static final String USER_KEY = "s";
+    private static final String USER_KEY = "u";
     private StringRedisTemplate redisTemplate;
     /**
      * 会话保持阀值,一般为session过期时间的一半
@@ -42,6 +42,11 @@ public class RedisSessionManager implements SessionHelper {
 
     public RedisSessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate) {
         this(redisTemplate, sessionIdGenerate, 4 * 60 * 60L, 4 * 60 * 60L);
+    }
+
+    @Override
+    public void createSession(SSOUser ssoUser) {
+        redisTemplate.opsForHash().put(redisSessionKey(ssoUser.getSessionId()), USER_KEY, JSONUtil.toJsonString(ssoUser));
     }
 
     @Override
