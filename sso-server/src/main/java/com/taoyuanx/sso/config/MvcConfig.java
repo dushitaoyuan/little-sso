@@ -78,7 +78,7 @@ public class MvcConfig implements WebMvcConfigurer, ResponseBodyAdvice<Object> {
         }
         Result failed = ResultBuilder.failed(errorCode, msg);
         response.setStatus(httpStatus);
-        if (isJson(request, handlerMethod)) {
+        if (ResponseUtil.isAcceptJson(request)) {
             ResponseUtil.responseJson(response, JSONUtil.toJsonString(failed), httpStatus);
             return new ModelAndView();
         } else {
@@ -89,25 +89,6 @@ public class MvcConfig implements WebMvcConfigurer, ResponseBodyAdvice<Object> {
             return modelAndView;
         }
     }
-
-    private boolean isJson(HttpServletRequest request, Object handler) {
-        if (handler != null && handler instanceof HandlerMethod) {
-            HandlerMethod handlerMethod = (HandlerMethod) handler;
-            if (handlerMethod.hasMethodAnnotation(ResponseBody.class)) {
-                return true;
-            }
-        }
-        String contentType = request.getHeader("Content-Type");
-        String accept = request.getHeader("Accept");
-        if ((accept != null && accept.contains("json")) || (contentType != null && contentType.contains("json"))) {
-            return true;
-        } else {
-            return false;
-        }
-
-
-    }
-
 
     /**
      * 跨域配置

@@ -1,13 +1,10 @@
-package com.taoyuanx.sso.core.utils;
+package com.taoyuanx.sso.client.utils;
 
 
 import javax.servlet.http.HttpServletRequest;
 
 
-/**
- * @date 2019/1/7 12:41
- * @desc 请求工具
- **/
+
 public class RequestUtil {
 
 
@@ -18,18 +15,11 @@ public class RequestUtil {
     public static String getHeaderOrParamValue(HttpServletRequest request, String key) {
         //fetch odrer  header > parameter
         String value = request.getHeader(key);
-        if (HelperUtil.isNotEmpty(value)) {
+        if (StrUtil.isNotEmpty(value)) {
             return value;
         } else {
             return request.getParameter(key);
         }
-    }
-
-    public static String getCookieDomain(HttpServletRequest request, String configDomain) {
-        if (HelperUtil.isEmpty(configDomain)) {
-            return request.getServerName();
-        }
-        return configDomain;
     }
 
 

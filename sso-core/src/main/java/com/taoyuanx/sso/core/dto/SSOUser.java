@@ -19,7 +19,9 @@ public class SSOUser implements Serializable {
     /**
      * userId
      */
-    private String userId;
+    private Long userId;
+
+    private String username;
 
 
 }

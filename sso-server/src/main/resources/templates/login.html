@@ -62,7 +62,7 @@
                 if (result.success == 1) {
                     layer.msg('登录成功!', function () {
                         setTimeout(function () {
-                            window.location.href = '/index';
+                            window.location.href = result.data.redirectUrl;
                         }, 200);
                     })
                 } else {

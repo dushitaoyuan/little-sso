@@ -4,6 +4,7 @@ import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
 import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.JSONUtil;
+import com.taoyuanx.sso.vo.LoginUserVo;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.Objects;
@@ -31,22 +32,30 @@ public class RedisSessionManager implements SessionManager {
 
     private SessionIdGenerate sessionIdGenerate;
 
+    private Long sessionTimeOutSeconds;
+
     public RedisSessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate,
                                Long sessionTimeKeepLimit,
-                               Long keepTimeOut) {
+                               Long keepTimeOut, Long sessionTimeOutSeconds) {
         this.redisTemplate = redisTemplate;
         this.sessionTimeKeepLimit = sessionTimeKeepLimit;
         this.keepTimeOut = keepTimeOut;
         this.sessionIdGenerate = sessionIdGenerate;
+        this.sessionTimeOutSeconds = sessionTimeOutSeconds;
     }
 
-    public RedisSessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate) {
-        this(redisTemplate, sessionIdGenerate, 4 * 60 * 60L, 4 * 60 * 60L);
+    public RedisSessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate,
+                               Long sessionTimeOutSeconds) {
+        this(redisTemplate, sessionIdGenerate, sessionTimeOutSeconds / 2, sessionTimeOutSeconds / 2, sessionTimeOutSeconds);
+
     }
+
 
     @Override
     public void createSession(SSOUser ssoUser) {
-        redisTemplate.opsForHash().put(redisSessionKey(ssoUser.getSessionId()), USER_KEY, JSONUtil.toJsonString(ssoUser));
+        String redisKey = redisSessionKey(ssoUser.getSessionId());
+        redisTemplate.opsForHash().put(redisKey, USER_KEY, JSONUtil.toJsonString(ssoUser));
+        redisTemplate.expire(redisKey, sessionTimeOutSeconds, TimeUnit.SECONDS);
     }
 
     @Override
@@ -56,8 +65,10 @@ public class RedisSessionManager implements SessionManager {
         /**
          * session过期时间剩余低于阀值时,保持会话时间
          */
-        if (Objects.nonNull(expire) && expire > 0 && expire <= sessionTimeKeepLimit) {
-            redisTemplate.expire(sessionKey, expire + keepTimeOut, TimeUnit.SECONDS);
+        if (Objects.nonNull(expire) && expire > 0) {
+            if (expire <= sessionTimeKeepLimit) {
+                redisTemplate.expire(sessionKey, expire + keepTimeOut, TimeUnit.SECONDS);
+            }
             return true;
         }
         return false;
@@ -68,7 +79,7 @@ public class RedisSessionManager implements SessionManager {
         String sessionKey = redisSessionKey(sessionId);
         String ssoUser = (String) redisTemplate.opsForHash().get(sessionKey, USER_KEY);
         if (Objects.nonNull(ssoUser)) {
-            return JSONUtil.parseObject(ssoUser, SSOUser.class);
+            return JSONUtil.parseObject(ssoUser, LoginUserVo.class);
         }
         return null;
     }

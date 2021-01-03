@@ -13,4 +13,9 @@ public class SSOConst {
      */
     public static final String SSO_REDIRECT_URL = "redirectUrl";
 
+    /**
+     * login check code
+     */
+    public static final Integer LOGIN_CHECK_FAILED_CODE = 9999;
+    public static final String SSO_COOKIE_PATH = "/";
 }

@@ -23,13 +23,20 @@ public class CookieUtil {
         response.addCookie(cookie);
     }
 
-    public static void deleteCookieValue(HttpServletRequest request, HttpServletResponse response, String name) {
+    public static void deleteCookieValue(HttpServletRequest request, HttpServletResponse response, String name, String cookieDomain, String cookiePath) {
         Cookie cookie = getCookie(request, name);
         if (Objects.nonNull(cookie)) {
             Cookie deleteCookie = new Cookie(name, "");
             deleteCookie.setMaxAge(0);
-            deleteCookie.setDomain(cookie.getDomain());
-            deleteCookie.setPath(cookie.getPath());
+
+            if (StrUtil.isNotEmpty(cookie.getDomain())) {
+                cookieDomain = cookie.getDomain();
+            }
+            if (StrUtil.isNotEmpty(cookie.getPath())) {
+                cookiePath = cookie.getPath();
+            }
+            deleteCookie.setPath(cookiePath);
+            deleteCookie.setDomain(cookieDomain);
             response.addCookie(cookie);
         }
 

@@ -27,9 +27,8 @@ public class SSOProperties {
      */
     private String sessionKeyName = SSOConst.SSO_SESSION_ID;
 
-    /**
-     * 登录地址
-     */
-    private String loginUrl="/login";
+
+
+    private boolean enableCookie;
 
 }

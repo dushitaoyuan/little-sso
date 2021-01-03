@@ -28,6 +28,6 @@ public class SSOConfig {
 
     @Bean
     public SessionManager sessionManager(StringRedisTemplate redisTemplate, SessionIdGenerate sessionIdGenerate) {
-        return new RedisSessionManager(redisTemplate, sessionIdGenerate, ssoProperties.getSessionTimeOut() * 60L / 2, ssoProperties.getSessionTimeOut() * 60L / 2);
+        return new RedisSessionManager(redisTemplate, sessionIdGenerate, ssoProperties.getSessionTimeOut() * 60L);
     }
 }

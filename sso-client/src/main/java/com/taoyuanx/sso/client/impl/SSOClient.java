@@ -2,6 +2,8 @@ package com.taoyuanx.sso.client.impl;
 
 import com.taoyuanx.sso.client.dto.SSOUser;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author dushitaoyuan
  * @desc sso-client
@@ -28,6 +30,11 @@ public interface SSOClient {
      * sessionId 是否合法
      */
     boolean isSessionIdValid(String sessionId);
+
+    /**
+     * 获取sessionId
+     */
+    String getSessionId(HttpServletRequest request);
 
 
 }

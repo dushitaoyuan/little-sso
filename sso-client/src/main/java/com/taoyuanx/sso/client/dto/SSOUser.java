@@ -16,4 +16,5 @@ import java.util.Map;
 public class SSOUser implements Serializable {
     private String sessionId;
     private String username;
+    private Long userId;
 }

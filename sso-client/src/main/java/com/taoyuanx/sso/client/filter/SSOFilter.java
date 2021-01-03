@@ -7,6 +7,7 @@ import com.taoyuanx.sso.client.core.SSOClientConfig;
 import com.taoyuanx.sso.client.core.SSOClientConstant;
 import com.taoyuanx.sso.client.core.sign.sign.impl.HMacVerifySign;
 import com.taoyuanx.sso.client.ex.SSOClientException;
+import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOClientImpl;
 import com.taoyuanx.sso.client.utils.AntPathMatcher;
@@ -30,14 +31,13 @@ import java.util.Objects;
  * @date 2020/12/29
  */
 @Slf4j
-@Setter
-@Getter
-public class SSOFilter implements Filter {
-    private static final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    private SSOClientConfig ssoClientConfig;
+public abstract class SSOFilter implements Filter {
+    protected static final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    private SSOClient ssoClient;
+    protected SSOClientConfig ssoClientConfig;
+
+    protected SSOClient ssoClient;
 
 
     public SSOFilter() {
@@ -51,62 +51,47 @@ public class SSOFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        log.debug("---in filter");
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String method = request.getMethod();
         String requestURI = request.getRequestURI();
-        String sessionId = getSessionId(request);
-        /**
-         *  when  ssoUrl ， clientLogoutPath ，clientLogoutPath is config
-         *   visit loginPath redirect to sso loginUrl
-         *   visit logoutPath logout from ssoServer then  redirect to sso loginUrl
-         *   or sso-app handle login or logout logic
-         */
-        if (matchLogout(requestURI, method)) {
-            try {
-                ssoClient.isSessionIdValid(sessionId);
-                ssoClient.logout(sessionId);
-                toLogin(request, response);
-            } catch (SSOClientException e) {
-                /**
-                 * delete cookie
-                 */
-                CookieUtil.deleteCookieValue(request, response, ssoClientConfig.getSessionKeyName());
-                log.error("check session failed", e);
-                toLogin(request, response);
-            }
-            return;
-        }
-        if (matchLogin(requestURI)) {
-            toLogin(request, response);
-            return;
-        }
-        /**
-         *  match url check isLogin
-         *  if not login redirect login
-         */
+        String sessionId = ssoClient.getSessionId(request);
 
-        if (isPathFilter(requestURI)) {
-            try {
-                ssoClient.isSessionIdValid(sessionId);
-                if (!ssoClient.loginCheck(sessionId)) {
-                    throw new SSOClientException("sessionId[" + sessionId + "] is invalid");
-                }
-                request.setAttribute(SSOClientConstant.SESSION_KEY_NAME, sessionId);
-                return;
-            } catch (SSOClientException e) {
-                log.error("check login failed", e);
-                /**
-                 * delete cookie
-                 */
-                CookieUtil.deleteCookieValue(request, response, ssoClientConfig.getSessionKeyName());
-                toLogin(request, response);
+
+        try {
+            /**
+             *  when  ssoUrl  ，clientLogoutPath is config
+             *   not login visit filterIncludePath redirect to sso loginUrl
+             *   visit logoutPath logout from ssoServer then  redirect to sso loginUrl
+             *   or sso-app handle login or logout logic
+             */
+            if (matchLogout(requestURI, method)) {
+                ssoClient.logout(sessionId);
+                logOutSuccessHandler(request, response);
                 return;
             }
+            /**
+             *  match url check isLogin
+             */
+            if (isPathFilter(requestURI)) {
+                if (ssoClient.loginCheck(sessionId)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                throw new SessionIdInvalidClientException("sessionId is invalid");
+            }
+        } catch (SessionIdInvalidClientException e) {
+            log.error("sessionId[" + sessionId + "] is invalid", e);
+            checkLoginFailedHandler(request, response);
+            return;
+        } catch (SSOClientException e) {
+            Result result = new Result();
+            result.setCode(SSOClientConstant.SSO_SERVER_ERROR_CODE);
+            ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
+            return;
         }
         filterChain.doFilter(request, response);
-        log.debug("---after filter");
+
     }
 
     private boolean isPathFilter(String requestURI) {
@@ -137,40 +122,11 @@ public class SSOFilter implements Filter {
         return false;
     }
 
-    private boolean matchLogin(String requestURI) {
-        return Objects.nonNull(ssoClientConfig.getClientLoginPath()) && antPathMatcher.match(ssoClientConfig.getClientLoginPath(), requestURI);
-    }
 
-    private String getSessionId(HttpServletRequest request) {
-        String sessionKeyName = ssoClientConfig.getSessionKeyName();
-        //fetch odrer  parameter > header > cookie
-        String value = request.getParameter(sessionKeyName);
-        if (StrUtil.isNotEmpty(value)) {
-            return value;
-        }
-        value = request.getHeader(sessionKeyName);
-        if (StrUtil.isNotEmpty(value)) {
-            return value;
-        } else {
-            return CookieUtil.getCookieValue(request, sessionKeyName);
-        }
-    }
+    public abstract void checkLoginFailedHandler(HttpServletRequest request, HttpServletResponse response);
 
-    private void toLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (ResponseUtil.isAcceptJson(request)) {
-            Result result = new Result();
-            result.setCode(SSOClientConstant.NOT_LOGIN_ERROR_CODE);
-            ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
-        } else {
-            String loginUrl = ssoClientConfig.getSsoLoginUrl();
-            if (!loginUrl.endsWith("?")) {
-                loginUrl += "?";
-            }
-            loginUrl += "&" + SSOClientConstant.redirectUrl + "=" + ssoClientConfig.getRedirectUrl();
 
-            response.sendRedirect(loginUrl);
-        }
-    }
+    public abstract void logOutSuccessHandler(HttpServletRequest request, HttpServletResponse response);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

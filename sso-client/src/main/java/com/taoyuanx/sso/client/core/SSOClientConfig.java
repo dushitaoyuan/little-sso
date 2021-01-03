@@ -3,28 +3,17 @@ package com.taoyuanx.sso.client.core;
 
 import com.sun.deploy.config.ClientConfig;
 import com.taoyuanx.sso.client.ex.SSOClientException;
-import com.taoyuanx.sso.client.impl.SSOClient;
-import com.taoyuanx.sso.client.impl.SSOClientImpl;
-import com.taoyuanx.sso.client.impl.interceptor.SSOClientInterceptor;
-import com.taoyuanx.sso.client.impl.loadbalance.ILoadbalance;
-import com.taoyuanx.sso.client.impl.loadbalance.LoadbalanceEnum;
-import com.taoyuanx.sso.client.utils.ServerUtil;
 import com.taoyuanx.sso.client.utils.StrUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 import javax.net.ssl.*;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -38,7 +27,7 @@ public class SSOClientConfig {
     /**
      * 服务地址
      */
-    private List<SSOServer> serverList;
+    private String ssoServer;
     /**
      * 连接超时时间 默认 5 秒
      */
@@ -51,15 +40,6 @@ public class SSOClientConfig {
      * 连接保持时间 默认 15秒
      */
     private Integer keepAliveDuration;
-
-    /**
-     * 心跳监测时间间隔 默认5秒
-     */
-    private Integer heartIdleTime;
-    /**
-     * 负载策略 支持Random(随机),Round(轮询)
-     */
-    private ILoadbalance loadbalance;
     /**
      * client Holder
      */
@@ -86,10 +66,7 @@ public class SSOClientConfig {
      * client退出http方法
      */
     private String clientLogoutMethod;
-    /**
-     * client 登录拦截地址
-     */
-    private String clientLoginPath;
+
 
     /**
      * sso 服务端登陆Url地址
@@ -105,12 +82,9 @@ public class SSOClientConfig {
     private String sessionIdSignHmacKey;
 
 
-    /**
-     * 心跳监测 定时器
-     */
-    private static ScheduledExecutorService ssoServerCheckPool;
+    private boolean enableCookie;
 
-    private boolean loadbalanceEnable = false;
+    private String sessionIdCookieDomain;
 
 
     public SSOClientConfig() {
@@ -121,18 +95,20 @@ public class SSOClientConfig {
         try {
             Properties config = new Properties();
             config.load(ClientConfig.class.getClassLoader().getResourceAsStream(configPath));
-            this.serverList = Arrays.asList(getProperty(config, CONFIG_PREFIX, "serverList").split(",")).stream().map(SSOServer::new).collect(Collectors.toList());
+            this.ssoServer = getProperty(config, CONFIG_PREFIX, "ssoServer");
+
+            this.enableCookie = getProperty(config, Boolean.class, CONFIG_PREFIX, "enableCookie", false);
+            if (enableCookie) {
+                this.sessionIdCookieDomain = getProperty(config, CONFIG_PREFIX, "sessionIdCookieDomain");
+            }
             this.connectTimeout = getProperty(config, Integer.class, CONFIG_PREFIX, "connectTimeout", 5);
             this.maxIdleConnections = getProperty(config, Integer.class, CONFIG_PREFIX, "maxIdleConnections", 100);
             this.keepAliveDuration = this.connectTimeout = getProperty(config, Integer.class, CONFIG_PREFIX, "keepAliveDuration", 15);
-            String loadbalance = getProperty(config, String.class, CONFIG_PREFIX, "loadbalance", null);
-            this.heartIdleTime = getProperty(config, Integer.class, CONFIG_PREFIX, "heartIdleTime", 5);
             this.sessionKeyName = getProperty(config, String.class, CONFIG_PREFIX, "sessionKeyName", SSOClientConstant.SESSION_KEY_NAME);
             String filterExcludePath = getProperty(config, String.class, CONFIG_PREFIX, "filterExcludePath", null);
             String filterIncludePath = getProperty(config, String.class, CONFIG_PREFIX, "filterIncludePath", null);
             this.clientLogoutMethod = getProperty(config, String.class, CONFIG_PREFIX, "clientLogoutMethod", null);
             this.clientLogoutPath = getProperty(config, String.class, CONFIG_PREFIX, "clientLogoutPath", null);
-            this.clientLoginPath = getProperty(config, String.class, CONFIG_PREFIX, "clientLoginPath", null);
             this.ssoLoginUrl = getProperty(config, String.class, CONFIG_PREFIX, "ssoLoginUrl", null);
             this.redirectUrl = getProperty(config, String.class, CONFIG_PREFIX, "redirectUrl", null);
 
@@ -144,20 +120,6 @@ public class SSOClientConfig {
                 this.filterExcludePath = Arrays.stream(filterExcludePath.split(",")).filter(StrUtil::isNotEmpty).collect(Collectors.toList());
             }
             this.filterIncludePath = Arrays.stream(filterIncludePath.split(",")).filter(StrUtil::isNotEmpty).collect(Collectors.toList());
-            SSOClientConfig myClientConfig = this;
-            if (StrUtil.isNotEmpty(loadbalance) && serverList.size() > 1) {
-                this.loadbalanceEnable = true;
-                this.loadbalance = LoadbalanceEnum.valueOf(loadbalance.toUpperCase()).getLoadbalance();
-                ssoServerCheckPool = Executors.newScheduledThreadPool(1);
-                //定时心跳检测
-                ssoServerCheckPool.scheduleAtFixedRate(() -> {
-                    try {
-                        ServerUtil.heartBeatCheck(myClientConfig);
-                    } catch (Exception e) {
-                        log.warn("server check error", e);
-                    }
-                }, 30, this.heartIdleTime, TimeUnit.SECONDS);
-            }
             initOkhttpClient();
         } catch (SSOClientException e) {
             throw e;
@@ -174,7 +136,6 @@ public class SSOClientConfig {
         sslContext.init(null, new TrustManager[]{trustManager}, null);
         sslParams.sSLSocketFactory = sslContext.getSocketFactory();
         sslParams.trustManager = trustManager;
-        Interceptor clientInterceptor = new SSOClientInterceptor(this);
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder().hostnameVerifier(new HostnameVerifier() {
             @Override
             public boolean verify(String hostname, SSLSession session) {
@@ -184,18 +145,12 @@ public class SSOClientConfig {
                 .connectTimeout(this.getConnectTimeout(), TimeUnit.SECONDS)
                 .connectionPool(new ConnectionPool(this.getMaxIdleConnections(), this.getKeepAliveDuration(), TimeUnit.SECONDS))
                 .retryOnConnectionFailure(false)
-                .addInterceptor(clientInterceptor)
                 .build();
         List<SSOServerApi> serverApiList = Arrays.asList(SSOServerApi.values());
         Map<SSOServerApi, String> apiMap = new HashMap(serverApiList.size());
         serverApiList.stream().forEach(api -> {
-            if (this.loadbalanceEnable) {
-                String virtualUrl = SSOClientConstant.SSO_CLIENT_BASE_URL + api.path;
-                apiMap.put(api, virtualUrl);
-            } else {
-                String realUrl = serverList.get(0).getServerUrl() + api.path;
-                apiMap.put(api, realUrl);
-            }
+            String realUrl = ssoServer + api.path;
+            apiMap.put(api, realUrl);
         });
 
         this.setApiMap(apiMap);
@@ -240,7 +195,7 @@ public class SSOClientConfig {
         }
         String value = config.getProperty(key);
         if (StrUtil.isEmpty(value)) {
-            throw new SSOClientException("config 异常:" + key);
+            throw new SSOClientException("config 异常," + key + "  未配置");
         }
         return value;
     }
