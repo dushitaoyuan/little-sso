@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * @author dushitaoyuan
@@ -52,6 +53,10 @@ public class SSOFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String method = request.getMethod();
         String requestURI = request.getRequestURI();
+        if (isResources(requestURI)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String sessionId = ssoClient.getSessionId(request);
         try {
             /**
@@ -84,6 +89,12 @@ public class SSOFilter implements Filter {
         }
         filterChain.doFilter(request, response);
 
+    }
+
+    private static final Pattern RESOURCES_PATTERN = Pattern.compile(".*\\..*$");
+
+    private boolean isResources(String requestURI) {
+        return RESOURCES_PATTERN.matcher(requestURI).matches();
     }
 
     private boolean isPathFilter(String requestURI) {

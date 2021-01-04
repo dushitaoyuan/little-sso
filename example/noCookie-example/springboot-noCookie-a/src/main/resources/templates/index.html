@@ -27,13 +27,13 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
 <button onclick="getUser()">获取用户信息</button>
 </br>
 用户信息:
-<textarea cols="10" rows="5" id="userInfo"></textarea>
+<textarea cols="50" rows="5" id="userInfo"></textarea>
 <input type="hidden" id="sessionId" th:value="${ssoUser.sessionId}">
 
-<script th:src="@{/js/layui/layui.all.js}"></script>
+<script  type="text/javascript" th:src="@{/js/layui/layui.all.js}"></script>
+
 <script type="text/javascript">
     $ = layui.jquery;
-    $.ajaxSetup()
     /**
      * 浏览器缓存sessionId,每次请求都自动携带该header,当然,这并不适合浏览器,更适合移动端,由移动端保存
      * 每次请求都在header中携带sessionId
@@ -43,13 +43,13 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
     function getUser() {
         $.ajax({
             method: "get",
-            url: "/appA/login",
+            url: "/appA/user",
             dataType: 'json',
             headers: {
                 'sso_session_id': localStorage.getItem('sessionId')
             },
             success: function (result) {
-                $("#userInfo").val(result);
+                $("#userInfo").val(JSON.stringify(result));
             }
         })
     }
