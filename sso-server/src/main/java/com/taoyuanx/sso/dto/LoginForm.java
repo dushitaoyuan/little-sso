@@ -16,4 +16,7 @@ public class LoginForm implements Serializable {
     private String username;
     @NotEmpty(message = "密码不可为空")
     private String password;
+
+
+    private String redirectUrl;
 }

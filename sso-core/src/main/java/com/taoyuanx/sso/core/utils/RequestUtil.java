@@ -2,6 +2,8 @@ package com.taoyuanx.sso.core.utils;
 
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 
 /**
@@ -30,6 +32,15 @@ public class RequestUtil {
             return request.getServerName();
         }
         return configDomain;
+    }
+
+
+    public static String addParamToUrl(String url, String paramKey, String paramValue) {
+        int flagIndex = url.indexOf("?");
+        if (flagIndex > -1) {
+            return url.substring(0, flagIndex) + "?" + paramKey + "=" + paramValue + "&" + url.substring(flagIndex + 1);
+        }
+        return url + "?" + paramKey + "=" + paramValue;
     }
 
 

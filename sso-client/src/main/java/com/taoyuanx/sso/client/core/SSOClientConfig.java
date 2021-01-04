@@ -87,6 +87,7 @@ public class SSOClientConfig {
     private String sessionIdCookieDomain;
 
 
+
     public SSOClientConfig() {
         this(DEFAULT_CONFIG);
     }
@@ -111,7 +112,6 @@ public class SSOClientConfig {
             this.clientLogoutPath = getProperty(config, String.class, CONFIG_PREFIX, "clientLogoutPath", null);
             this.ssoLoginUrl = getProperty(config, String.class, CONFIG_PREFIX, "ssoLoginUrl", null);
             this.redirectUrl = getProperty(config, String.class, CONFIG_PREFIX, "redirectUrl", null);
-
             this.sessionIdSignHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "sessionIdSignHmacKey", "dushitaoyuan");
             if (StrUtil.isEmpty(filterIncludePath) || StrUtil.isEmpty(redirectUrl)) {
                 throw new SSOClientException("filterIncludePath or redirectUrl not config");

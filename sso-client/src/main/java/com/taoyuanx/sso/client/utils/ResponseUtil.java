@@ -21,9 +21,6 @@ public class ResponseUtil {
         }
     }
 
-    public static boolean isAjaxRequest(HttpServletRequest request) {
-        return request.getHeader("X-Requested-With") != null && request.getHeader("X-Requested-With").equals("XMLHttpRequest");
-    }
 
     public static boolean isAcceptJson(HttpServletRequest request) {
         String accept = request.getHeader("Accept");

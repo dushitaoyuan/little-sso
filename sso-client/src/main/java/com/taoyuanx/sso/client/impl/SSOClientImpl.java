@@ -45,13 +45,14 @@ public class SSOClientImpl implements SSOClient {
     public boolean loginCheck(String sessionId) {
         String url = buildUrlWithSessionId(SSOServerApi.LOGIN_CHECK, sessionId);
         try {
-            Result result = OkHttpUtil.request(client, new Request.Builder()
+            OkHttpUtil.request(client, new Request.Builder()
                     .url(url).header("Accept", "application/json").get().build(), Result.class);
-            return result.success();
+            return true;
         } catch (SSOClientException e) {
-            log.warn("sso check error", e);
+            log.debug("check failed", e);
             return false;
         }
+
     }
 
     @Override
@@ -65,11 +66,8 @@ public class SSOClientImpl implements SSOClient {
     @Override
     public void logout(String sessionId) {
         String url = buildUrlWithSessionId(SSOServerApi.LOGOUT, sessionId);
-        Result result = OkHttpUtil.request(client, new Request.Builder()
+        OkHttpUtil.request(client, new Request.Builder()
                 .url(url).header("Accept", "application/json").get().build(), Result.class);
-        if (!result.success()) {
-            log.warn("logout failed msg:{}", result.getMsg());
-        }
     }
 
     @Override

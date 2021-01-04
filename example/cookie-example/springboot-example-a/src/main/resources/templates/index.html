@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="Thymeleaf"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>A系统页面</title>
+
+</head>
+
+<body>
+
+<h3>A系统-index</h3>
+username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
+<a href="http://localhost:8082/appB">
+    访问B系统
+</a>
+</br>
+<a href="http://localhost:8081/appA/logout">
+    退出系统
+</a>
+</body>
+
+</html>

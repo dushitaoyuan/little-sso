@@ -5,7 +5,7 @@ package com.taoyuanx.sso.client.core;
  */
 public enum SSOServerApi {
     LOGIN_CHECK("/sso/loginCheck", "登录检测"),
-    GET_SSO_USER("/sso/info", "获取用户信息"),
+    GET_SSO_USER("/sso/user", "获取用户信息"),
     LOGOUT("/sso/logout", "退出"),
     ;
     public String path;

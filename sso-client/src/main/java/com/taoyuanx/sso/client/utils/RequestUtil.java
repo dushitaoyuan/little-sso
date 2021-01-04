@@ -22,5 +22,11 @@ public class RequestUtil {
         }
     }
 
-
+    public static String addParamToUrl(String url, String paramKey, String paramValue) {
+        int flagIndex = url.indexOf("?");
+        if (flagIndex > -1) {
+            return url.substring(0, flagIndex) + "?" + paramKey + "=" + paramValue + "&" + url.substring(flagIndex + 1);
+        }
+        return url + "?" + paramKey + "=" + paramValue;
+    }
 }

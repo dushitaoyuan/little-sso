@@ -10,19 +10,16 @@ import com.taoyuanx.sso.client.ex.SSOClientException;
 import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOClientImpl;
-import com.taoyuanx.sso.client.utils.AntPathMatcher;
-import com.taoyuanx.sso.client.utils.CookieUtil;
-import com.taoyuanx.sso.client.utils.ResponseUtil;
-import com.taoyuanx.sso.client.utils.StrUtil;
-import lombok.Getter;
-import lombok.Setter;
+import com.taoyuanx.sso.client.utils.*;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -32,7 +29,7 @@ import java.util.Objects;
  */
 @Slf4j
 
-public abstract class SSOFilter implements Filter {
+public class SSOFilter implements Filter {
     protected static final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     protected SSOClientConfig ssoClientConfig;
@@ -56,8 +53,6 @@ public abstract class SSOFilter implements Filter {
         String method = request.getMethod();
         String requestURI = request.getRequestURI();
         String sessionId = ssoClient.getSessionId(request);
-
-
         try {
             /**
              *  when  ssoUrl  ，clientLogoutPath is config
@@ -70,6 +65,7 @@ public abstract class SSOFilter implements Filter {
                 logOutSuccessHandler(request, response);
                 return;
             }
+
             /**
              *  match url check isLogin
              */
@@ -78,16 +74,12 @@ public abstract class SSOFilter implements Filter {
                     filterChain.doFilter(request, response);
                     return;
                 }
-                throw new SessionIdInvalidClientException("sessionId is invalid");
+                checkLoginFailedHandler(request, response);
+                return;
             }
         } catch (SessionIdInvalidClientException e) {
-            log.error("sessionId[" + sessionId + "] is invalid", e);
+            log.debug("sessionId[" + sessionId + "] is invalid", e);
             checkLoginFailedHandler(request, response);
-            return;
-        } catch (SSOClientException e) {
-            Result result = new Result();
-            result.setCode(SSOClientConstant.SSO_SERVER_ERROR_CODE);
-            ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
             return;
         }
         filterChain.doFilter(request, response);
@@ -123,10 +115,47 @@ public abstract class SSOFilter implements Filter {
     }
 
 
-    public abstract void checkLoginFailedHandler(HttpServletRequest request, HttpServletResponse response);
+    public void checkLoginFailedHandler(HttpServletRequest request, HttpServletResponse response) {
+
+        try {
+            if (ssoClientConfig.isEnableCookie()) {
+                /**
+                 * delete cookie and  redirect  to login
+                 */
+                CookieUtil.deleteCookieValue(request, response, ssoClientConfig.getSessionKeyName(), ssoClientConfig.getSessionIdCookieDomain(), SSOClientConstant.COOKIE_STORE_PATH);
+            }
+            if (ResponseUtil.isAcceptJson(request)) {
+                Result result = new Result();
+                result.setCode(SSOClientConstant.LOGIN_CHECK_FAILED_CODE);
+                result.setMsg("login check failed,sso-client application must delete the sessionId and  must relogin");
+                Map toLogin = new HashMap<>();
+                String loginUrl = RequestUtil.addParamToUrl(ssoClientConfig.getSsoLoginUrl(), SSOClientConstant.REDIRECT_URL, ssoClientConfig.getRedirectUrl());
+                toLogin.put(SSOClientConstant.REDIRECT_URL, loginUrl);
+                result.setData(JSON.toJSONString(toLogin));
+                ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
+            } else {
+                String loginUrl = RequestUtil.addParamToUrl(ssoClientConfig.getSsoLoginUrl(), SSOClientConstant.REDIRECT_URL, ssoClientConfig.getRedirectUrl());
+                response.sendRedirect(loginUrl);
+            }
+
+        } catch (Exception e) {
+            log.warn("to login error", e);
+        }
+    }
 
 
-    public abstract void logOutSuccessHandler(HttpServletRequest request, HttpServletResponse response);
+    public void logOutSuccessHandler(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (ssoClientConfig.isEnableCookie()) {
+            /**
+             * delete cookie and  redirect  to login
+             */
+            CookieUtil.deleteCookieValue(request, response, ssoClientConfig.getSessionKeyName(), ssoClientConfig.getSessionIdCookieDomain(), SSOClientConstant.COOKIE_STORE_PATH);
+        }
+        Result result = new Result();
+        result.setCode(Result.SUCCESS_CODE);
+        result.setMsg("logout success");
+        ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
+    }
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

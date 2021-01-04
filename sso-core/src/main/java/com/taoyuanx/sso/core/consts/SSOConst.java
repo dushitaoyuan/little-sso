@@ -13,6 +13,11 @@ public class SSOConst {
      */
     public static final String SSO_REDIRECT_URL = "redirectUrl";
 
+
+    /**
+     * sso 服务异常
+     */
+    public static final Integer SSO_SERVER_ERROR_CODE = 500;
     /**
      * login check code
      */

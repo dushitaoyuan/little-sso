@@ -14,6 +14,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>springboot-example</module>
+        <module>cookie-example</module>
+        <module>noCookie-example</module>
     </modules>
 </project>

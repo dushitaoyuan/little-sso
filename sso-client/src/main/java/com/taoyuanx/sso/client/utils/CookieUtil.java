@@ -9,17 +9,20 @@ import java.util.Objects;
 
 public class CookieUtil {
 
-    public static void addCookie(HttpServletResponse response, String name, String value, String domain, Integer maxAge) {
+    public static void addCookie(HttpServletResponse response, String name, String value, String domain, Integer maxAge, String cookiePath) {
         Cookie cookie = new Cookie(name, value);
         if (StrUtil.isNotEmpty(domain)) {
             cookie.setDomain(domain);
         }
-        cookie.setPath("/");
+        if (StrUtil.isEmpty(cookiePath)) {
+            cookiePath = "/";
+        }
         if (maxAge == null) {
             maxAge = -1;
         }
         cookie.setMaxAge(maxAge);
         cookie.setHttpOnly(true);
+        cookie.setPath(cookiePath);
         response.addCookie(cookie);
     }
 
@@ -28,7 +31,6 @@ public class CookieUtil {
         if (Objects.nonNull(cookie)) {
             Cookie deleteCookie = new Cookie(name, "");
             deleteCookie.setMaxAge(0);
-
             if (StrUtil.isNotEmpty(cookie.getDomain())) {
                 cookieDomain = cookie.getDomain();
             }
@@ -37,7 +39,8 @@ public class CookieUtil {
             }
             deleteCookie.setPath(cookiePath);
             deleteCookie.setDomain(cookieDomain);
-            response.addCookie(cookie);
+            deleteCookie.setHttpOnly(true);
+            response.addCookie(deleteCookie);
         }
 
     }

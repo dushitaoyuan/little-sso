@@ -1,8 +1,9 @@
 package com.taoyuanx.sso.client.ex;
 
-import java.util.Objects;
 
 public class SSOClientException extends RuntimeException {
+
+    private Integer code;
 
     public SSOClientException(String msg) {
         super(msg);
@@ -12,10 +13,12 @@ public class SSOClientException extends RuntimeException {
         super(msg, e);
     }
 
-    public SSOClientException(Integer errorCode, String msg) {
+    public SSOClientException(Integer code, String msg) {
         super(msg);
+        this.code = code;
     }
 
-
-
+    public Integer getCode() {
+        return code;
+    }
 }

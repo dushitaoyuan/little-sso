@@ -5,8 +5,15 @@ import com.taoyuanx.sso.core.session.SessionIdGenerate;
 import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import com.taoyuanx.sso.vo.LoginUserVo;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisStringCommands;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.types.Expiration;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -18,8 +25,13 @@ import java.util.concurrent.TimeUnit;
 public class RedisSessionManager implements SessionManager {
 
     private static final String REDIS_SESSION_NAMESPACE = "s:";
-
+    /**
+     * redis session 存储结构 为 hash
+     * 存储内容 user(USER_KEY), 创建时间(CREATE_TIME_KEY),上次(LAST_ACTIVE_TIME_KEY,可用来剔除长时间不活动的会话)
+     */
     private static final String USER_KEY = "u";
+    private static final String CREATE_TIME_KEY = "c";
+    private static final String LAST_ACTIVE_TIME_KEY = "lc";
     private StringRedisTemplate redisTemplate;
     /**
      * 会话保持阀值,一般为session过期时间的一半
@@ -54,23 +66,27 @@ public class RedisSessionManager implements SessionManager {
     @Override
     public void createSession(SSOUser ssoUser) {
         String redisKey = redisSessionKey(ssoUser.getSessionId());
-        redisTemplate.opsForHash().put(redisKey, USER_KEY, JSONUtil.toJsonString(ssoUser));
+        Map<String, String> sessionHashValue = new HashMap<>();
+        sessionHashValue.put(CREATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
+        sessionHashValue.put(USER_KEY, JSONUtil.toJsonString(ssoUser));
+        redisTemplate.opsForHash().putAll(redisKey, sessionHashValue);
         redisTemplate.expire(redisKey, sessionTimeOutSeconds, TimeUnit.SECONDS);
     }
 
     @Override
     public boolean isLogin(String sessionId) {
-        String sessionKey = redisSessionKey(sessionId);
-        Long expire = redisTemplate.getExpire(sessionKey);
+        String redisKey = redisSessionKey(sessionId);
+        Long expire = redisTemplate.getExpire(redisKey);
         /**
          * session过期时间剩余低于阀值时,保持会话时间
          */
         if (Objects.nonNull(expire) && expire > 0) {
             if (expire <= sessionTimeKeepLimit) {
-                redisTemplate.expire(sessionKey, expire + keepTimeOut, TimeUnit.SECONDS);
+                redisTemplate.expire(redisKey, expire + keepTimeOut, TimeUnit.SECONDS);
             }
             return true;
         }
+        redisTemplate.opsForHash().put(redisKey, LAST_ACTIVE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
         return false;
     }
 

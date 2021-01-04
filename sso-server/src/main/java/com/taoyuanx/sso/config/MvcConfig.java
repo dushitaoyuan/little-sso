@@ -1,13 +1,16 @@
 package com.taoyuanx.sso.config;
 
 
+import com.taoyuanx.sso.core.consts.SSOConst;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
 import com.taoyuanx.sso.core.exception.SSOException;
 import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
+import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.JSONUtil;
 import com.taoyuanx.sso.core.utils.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.MediaType;
@@ -24,6 +27,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 /**
  * @author dushitaoyuan
@@ -65,29 +69,38 @@ public class MvcConfig implements WebMvcConfigurer, ResponseBodyAdvice<Object> {
     public ModelAndView handle(Exception e, HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) {
         Integer httpStatus = 500;
         String msg = e.getMessage();
-        Integer errorCode = 500;
+        Integer code = SSOConst.SSO_SERVER_ERROR_CODE;
         ResponseStatus responseStatus = AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class);
         if (responseStatus != null) {
             httpStatus = responseStatus.code().value();
         }
-        if (e instanceof SSOException || e instanceof SessionIdInvalidException) {
+        if (e instanceof SSOException) {
             httpStatus = 200;
+        }
+        if (e instanceof SessionManager) {
+            httpStatus = 200;
+            code = SSOConst.LOGIN_CHECK_FAILED_CODE;
         } else {
             log.error("系统异常", e);
             msg = "系统异常";
         }
-        Result failed = ResultBuilder.failed(errorCode, msg);
+        Result failed = ResultBuilder.failed(code, msg);
         response.setStatus(httpStatus);
-        if (ResponseUtil.isAcceptJson(request)) {
+        if (isResponseJson(request, handlerMethod)) {
             ResponseUtil.responseJson(response, JSONUtil.toJsonString(failed), httpStatus);
             return new ModelAndView();
         } else {
             ModelAndView modelAndView = new ModelAndView();
             modelAndView.setViewName("error");
             modelAndView.addObject("errorMsg", msg);
-            modelAndView.addObject("errorCode", failed.getErrorCode());
+            modelAndView.addObject("errorCode", failed.getCode());
             return modelAndView;
         }
+    }
+
+    private boolean isResponseJson(HttpServletRequest request, HandlerMethod handlerMethod) {
+        return ResponseUtil.isAcceptJson(request) || (
+                Objects.nonNull(handlerMethod) && handlerMethod.hasMethodAnnotation(ResponseBody.class));
     }
 
     /**

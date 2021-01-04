@@ -16,7 +16,7 @@ import java.io.Serializable;
  */
 @Data
 public class Result implements Serializable {
-    private Integer errorCode;
+    private Integer code;
     private String msg;
     private Integer success;
     private Object data;
@@ -27,7 +27,7 @@ public class Result implements Serializable {
     }
 
     public Result buildCode(Integer code) {
-        this.setErrorCode(code);
+        this.setCode(code);
         return this;
     }
 

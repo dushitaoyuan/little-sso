@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="Thymeleaf"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>B系统页面</title>
+
+</head>
+
+<body>
+
+<h3>B系统-index</h3>
+username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
+<input type="hidden" id="sessionId" th:value="${ssoUser.sessionId}">
+<a th:href="@{http://localhost:8081/appA?(sso_session_id=${ssoUser.sessionId})}">
+    访问A系统
+</a>
+</br>
+<a th:href="@{http://localhost:8082/appB/logout?(sso_session_id=${ssoUser.sessionId})}">
+    退出系统
+</a>
+</body>
+
+</html>
