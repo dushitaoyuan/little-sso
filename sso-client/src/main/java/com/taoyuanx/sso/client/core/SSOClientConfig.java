@@ -87,6 +87,8 @@ public class SSOClientConfig {
     private String sessionIdCookieDomain;
 
 
+    private String tokenRefreshPath;
+
 
     public SSOClientConfig() {
         this(DEFAULT_CONFIG);

@@ -44,7 +44,7 @@ public class OkHttpUtil {
         } catch (SSOClientException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("sso request error", e);
+            throw new SSOClientException("sso request error", e);
         } finally {
             if (Objects.nonNull(response)) {
                 response.close();

@@ -13,6 +13,8 @@ public class SessionIdInvalidClientException extends RuntimeException {
     }
 
 
-
+    public SessionIdInvalidClientException(Throwable e) {
+        super(e);
+    }
 
 }

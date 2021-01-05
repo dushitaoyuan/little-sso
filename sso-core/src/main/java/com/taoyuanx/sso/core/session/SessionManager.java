@@ -8,7 +8,6 @@ import com.taoyuanx.sso.core.dto.SSOUser;
  * session 管理接口
  */
 public interface SessionManager {
-
     void createSession(SSOUser ssoUser);
 
     boolean isLogin(String sessionId);

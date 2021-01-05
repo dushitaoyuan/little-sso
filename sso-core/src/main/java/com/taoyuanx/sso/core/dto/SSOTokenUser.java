@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Map;
 
 /**
  * @author dushitaoyuan
@@ -13,15 +12,14 @@ import java.util.Map;
  */
 @Setter
 @Getter
-public class SSOUser implements Serializable {
+public class SSOTokenUser extends SSOUser {
 
-    private String sessionId;
-    /**
-     * userId
-     */
-    private Long userId;
 
-    private String username;
+    private String refreshToken;
+
+    private Long expire;
+
+    private Integer tokenType;
 
 
 }

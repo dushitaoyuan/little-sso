@@ -28,7 +28,15 @@ public class SSOProperties {
     private String sessionKeyName = SSOConst.SSO_SESSION_ID;
 
 
-
+    /**
+     * 使用采用cookie模式
+     */
     private boolean enableCookie;
+
+
+    /**
+     * 服务端会话管理模式是否为 token
+     */
+    private boolean tokenSessionEnable;
 
 }

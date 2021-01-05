@@ -4,10 +4,13 @@ import com.taoyuanx.sso.config.SSOProperties;
 import com.taoyuanx.sso.core.consts.SSOConst;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
+import com.taoyuanx.sso.core.dto.SSOTokenUser;
+import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.core.exception.SSOException;
 import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.session.SessionIdGenerate;
 import com.taoyuanx.sso.core.session.SessionManager;
+import com.taoyuanx.sso.core.session.TokenSessionManager;
 import com.taoyuanx.sso.core.utils.CookieUtil;
 import com.taoyuanx.sso.core.utils.RequestUtil;
 import com.taoyuanx.sso.dto.LoginForm;
@@ -30,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,9 +51,6 @@ public class SSOLoginController {
     UserService userService;
     @Autowired
     SessionManager sessionManager;
-
-    @Autowired
-    SessionIdGenerate sessionIdGenerate;
     @Autowired
     SSOProperties ssoProperties;
 
@@ -76,7 +75,7 @@ public class SSOLoginController {
                 CookieUtil.deleteCookieValue(request, response, ssoProperties.getSessionKeyName(), ssoProperties.getSessionIdCookieDomain(), SSOConst.SSO_COOKIE_PATH);
             }
         }
-        modelAndView.addObject("redirectUrl", redirectUrl);
+        modelAndView.addObject(SSOConst.SSO_REDIRECT_URL, redirectUrl);
         modelAndView.setViewName("login");
         return modelAndView;
     }
@@ -101,29 +100,43 @@ public class SSOLoginController {
         if (StringUtils.isEmpty(redirectUrl)) {
             redirectUrl = dbUser.getLoginRedirectUrl();
         }
-        LoginUserVo loginUserVo = new LoginUserVo();
-        loginUserVo.setUserEntity(dbUser);
-        loginUserVo.setRedirectUrl(redirectUrl);
-        try {
-            UserEntity userEntity = loginUserVo.getUserEntity();
-            Long userId = userEntity.getId();
-            loginUserVo.setSessionId(sessionIdGenerate.generate(String.valueOf(userId)));
-            loginUserVo.setUserId(userId);
-            loginUserVo.setUsername(userEntity.getUsername());
+
+        if (ssoProperties.isTokenSessionEnable()) {
+            SSOTokenUser ssoTokenUser = new SSOTokenUser();
+            ssoTokenUser.setUserId(dbUser.getId());
+            ssoTokenUser.setUsername(dbUser.getUsername());
+            /**
+             * 分布式session example:jwt
+             */
+            return tokenSessionSuccessHandler(ssoTokenUser, redirectUrl, response);
+
+        } else {
+            LoginUserVo loginUserVo = new LoginUserVo();
+            loginUserVo.setUserEntity(dbUser);
+            loginUserVo.setUserId(dbUser.getId());
+            loginUserVo.setUsername(dbUser.getUsername());
             loginUserVo.setRedirectUrl(redirectUrl);
+            /**
+             * 集中式session处理 example:redis
+             */
+            return centralizedSessionSuccessHandler(loginUserVo, response);
+        }
+    }
+
+    private Result centralizedSessionSuccessHandler(LoginUserVo loginUserVo, HttpServletResponse response) {
+        try {
             if (ssoProperties.isEnableCookie()) {
-                cookieSuccessHandler(loginUserVo, response);
+                cookieCentralizedSessionSuccessHandler(loginUserVo, response);
             } else {
-                paramSuccessHandler(loginUserVo, response);
+                paramCentralizedSessionSuccessHandler(loginUserVo);
             }
             Map loginResult = new HashMap<>();
-            loginResult.put("redirectUrl", loginUserVo.getRedirectUrl());
+            loginResult.put(SSOConst.SSO_REDIRECT_URL, loginUserVo.getRedirectUrl());
             return ResultBuilder.success(loginResult);
         } catch (Exception e) {
             log.error("登录失败", e);
             throw new SSOException("登录失败");
         }
-
 
     }
 
@@ -131,7 +144,7 @@ public class SSOLoginController {
     /**
      * 将cookie 写入浏览器,domain为主域名,可在使用子域名的sso-client application间自动传输
      */
-    private void cookieSuccessHandler(LoginUserVo loginUserVo, HttpServletResponse response) throws IOException {
+    private void cookieCentralizedSessionSuccessHandler(LoginUserVo loginUserVo, HttpServletResponse response) throws IOException {
         sessionManager.createSession(loginUserVo);
         CookieUtil.addCookie(response, ssoProperties.getSessionKeyName(), loginUserVo.getSessionId(), ssoProperties.getSessionIdCookieDomain(), ssoProperties.getSessionTimeOut() * 60, SSOConst.SSO_COOKIE_PATH);
     }
@@ -139,13 +152,63 @@ public class SSOLoginController {
     /**
      * 将sessionId传递给sso-client application,由 sso-client 自定义存储,并在跳转时由发起方系统传递给另一方系统
      */
-    private void paramSuccessHandler(LoginUserVo loginUserVo, HttpServletResponse response) throws IOException {
+    private void paramCentralizedSessionSuccessHandler(LoginUserVo loginUserVo) throws IOException {
+        sessionManager.createSession(loginUserVo);
         String redirectUrlWithSessionId = RequestUtil.addParamToUrl(loginUserVo.getRedirectUrl(), ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
         loginUserVo.setRedirectUrl(redirectUrlWithSessionId);
-        sessionManager.createSession(loginUserVo);
     }
 
 
+    private Result tokenSessionSuccessHandler(SSOTokenUser ssoTokenUser, String redirectUrl, HttpServletResponse response) {
+        try {
+            /**
+             *  登录成功,将sessionToken(sessionId)和refreshToken都传递给接入的系统
+             *  服务端不存储session,由接入系统存储
+             *  token 过期前调 用refresh接口获取新的token
+             */
+            sessionManager.createSession(ssoTokenUser);
+            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, ssoProperties.getSessionKeyName(), ssoTokenUser.getSessionId());
+            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
+            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_TOKEN_EXPIRE, String.valueOf(ssoTokenUser.getExpire()));
+            Map loginResult = new HashMap<>();
+            loginResult.put(SSOConst.SSO_REDIRECT_URL, redirectUrl);
+            return ResultBuilder.success(loginResult);
+        } catch (Exception e) {
+            log.error("登录失败", e);
+            throw new SSOException("登录失败");
+        }
+    }
 
+    /**
+     * 续期处理
+     */
+    @PostMapping("/refresh")
+    @ResponseBody
+    public Result refresh(HttpServletRequest request) {
+        try {
+            if (!ssoProperties.isTokenSessionEnable()) {
+                throw new SSOException("接口未启用");
+            }
+            String refreshToken = request.getParameter(SSOConst.SSO_REFRESH_TOKEN);
+            SSOTokenUser ssoUser = (SSOTokenUser) sessionManager.getSSOUser(refreshToken);
+            if (ssoUser.getTokenType().equals(TokenSessionManager.TOKEN_TYPE_REFRESH)) {
+                throw new SSOException("tokenType 不匹配");
+            }
+            SSOTokenUser ssoTokenUser = new SSOTokenUser();
+            ssoTokenUser.setUserId(ssoUser.getUserId());
+            ssoTokenUser.setUsername(ssoUser.getUsername());
+            sessionManager.createSession(ssoTokenUser);
+            Map refreshResult = new HashMap<>();
+            refreshResult.put(ssoProperties.getSessionKeyName(), ssoUser.getSessionId());
+            refreshResult.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
+            refreshResult.put(SSOConst.SSO_TOKEN_EXPIRE, ssoTokenUser.getExpire());
+            return ResultBuilder.success(refreshResult);
+        } catch (SSOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("登录失败", e);
+            throw new SSOException("续期失败");
+        }
+    }
 
 }

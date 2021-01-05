@@ -65,6 +65,7 @@ public class RedisSessionManager implements SessionManager {
 
     @Override
     public void createSession(SSOUser ssoUser) {
+        sessionIdGenerate.generateSessionId(ssoUser);
         String redisKey = redisSessionKey(ssoUser.getSessionId());
         Map<String, String> sessionHashValue = new HashMap<>();
         sessionHashValue.put(CREATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
@@ -107,7 +108,7 @@ public class RedisSessionManager implements SessionManager {
     }
 
     private String redisSessionKey(String sessionId) {
-        String userId = sessionIdGenerate.isSessionIdValid(sessionId);
+        String userId = sessionIdGenerate.parseSessionId(sessionId);
         return REDIS_SESSION_NAMESPACE + userId;
     }
 }

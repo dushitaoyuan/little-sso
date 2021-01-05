@@ -25,6 +25,12 @@ public class SuperToken {
     @JsonProperty("t")
     private Integer type;
     /**
+     * 创建时间
+     */
+    @JsonProperty("c")
+    private Long createTime;
+
+    /**
      * token 签名
      */
     @JsonIgnore

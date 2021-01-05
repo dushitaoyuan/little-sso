@@ -20,7 +20,7 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
     访问B系统,跨系统传递sessionId
 </a>
 </br>
-<a th:href="@{http://localhost:8082/appA/logout?(sso_session_id=${ssoUser.sessionId})}">
+<a th:href="@{http://localhost:8081/appA/logout?(sso_session_id=${ssoUser.sessionId})}">
     退出系统
 </a>
 </br>
@@ -30,24 +30,29 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
 <textarea cols="50" rows="5" id="userInfo"></textarea>
 <input type="hidden" id="sessionId" th:value="${ssoUser.sessionId}">
 
-<script  type="text/javascript" th:src="@{/js/layui/layui.all.js}"></script>
+<script  type="text/javascript" th:src="@{/js/jquery3.4.1.js}"></script>
 
 <script type="text/javascript">
-    $ = layui.jquery;
     /**
      * 浏览器缓存sessionId,每次请求都自动携带该header,当然,这并不适合浏览器,更适合移动端,由移动端保存
      * 每次请求都在header中携带sessionId
      */
     localStorage.setItem('sessionId', $("#sessionId").val());
 
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("sso_session_id", localStorage.getItem('sessionId'));
+        },
+        success: function(result) {
+            alert(result);
+        }
+
+    });
     function getUser() {
         $.ajax({
             method: "get",
             url: "/appA/user",
             dataType: 'json',
-            headers: {
-                'sso_session_id': localStorage.getItem('sessionId')
-            },
             success: function (result) {
                 $("#userInfo").val(JSON.stringify(result));
             }

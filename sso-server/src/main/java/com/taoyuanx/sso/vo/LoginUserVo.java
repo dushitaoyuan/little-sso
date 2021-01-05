@@ -17,4 +17,9 @@ public class LoginUserVo extends SSOUser {
 
     private String redirectUrl;
 
+
+
+    private String refreshToken;
+
+
 }

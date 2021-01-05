@@ -1,6 +1,6 @@
 package com.taoyuanx.sso.core.session;
 
-import com.taoyuanx.sso.core.exception.SSOException;
+import com.taoyuanx.sso.core.dto.SSOUser;
 
 /**
  * @author dushitaoyuan
@@ -9,8 +9,13 @@ import com.taoyuanx.sso.core.exception.SSOException;
  */
 public interface SessionIdGenerate {
 
-    String generate(String uniqueData);
+    void generateSessionId(SSOUser ssoUser);
 
-    String isSessionIdValid(String sessionId) throws SSOException;
+    boolean isSessionIdValid(String sessionId);
+
+    /**
+     * 解析sessionId 获取数据
+     */
+    String parseSessionId(String sessionId);
 
 }
