@@ -14,7 +14,6 @@ import java.io.Serializable;
 @Getter
 public class SSOTokenUser extends SSOUser {
 
-
     private String refreshToken;
 
     private Long expire;

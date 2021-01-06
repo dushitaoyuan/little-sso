@@ -90,6 +90,9 @@ public class SSOClientConfig {
     private String tokenRefreshPath;
 
 
+    private String sessionMode;
+
+
     public SSOClientConfig() {
         this(DEFAULT_CONFIG);
     }
@@ -100,24 +103,27 @@ public class SSOClientConfig {
             config.load(ClientConfig.class.getClassLoader().getResourceAsStream(configPath));
             this.ssoServer = getProperty(config, CONFIG_PREFIX, "ssoServer");
 
+
+            this.sessionMode = getProperty(config, String.class, CONFIG_PREFIX, "sessionMode", SSOClientConstant.SESSION_MODE_SERVER);
+            if (this.sessionMode.equals(SSOClientConstant.SESSION_MODE_CLIENT)) {
+                this.tokenRefreshPath = getProperty(config, CONFIG_PREFIX, "tokenRefreshPath");
+            }
             this.enableCookie = getProperty(config, Boolean.class, CONFIG_PREFIX, "enableCookie", false);
             if (enableCookie) {
                 this.sessionIdCookieDomain = getProperty(config, CONFIG_PREFIX, "sessionIdCookieDomain");
             }
+            this.sessionKeyName = getProperty(config, String.class, CONFIG_PREFIX, "sessionKeyName", SSOClientConstant.SESSION_KEY_NAME);
             this.connectTimeout = getProperty(config, Integer.class, CONFIG_PREFIX, "connectTimeout", 5);
             this.maxIdleConnections = getProperty(config, Integer.class, CONFIG_PREFIX, "maxIdleConnections", 100);
             this.keepAliveDuration = this.connectTimeout = getProperty(config, Integer.class, CONFIG_PREFIX, "keepAliveDuration", 15);
-            this.sessionKeyName = getProperty(config, String.class, CONFIG_PREFIX, "sessionKeyName", SSOClientConstant.SESSION_KEY_NAME);
             String filterExcludePath = getProperty(config, String.class, CONFIG_PREFIX, "filterExcludePath", null);
-            String filterIncludePath = getProperty(config, String.class, CONFIG_PREFIX, "filterIncludePath", null);
+            String filterIncludePath = getProperty(config, CONFIG_PREFIX, "filterIncludePath");
             this.clientLogoutMethod = getProperty(config, String.class, CONFIG_PREFIX, "clientLogoutMethod", null);
-            this.clientLogoutPath = getProperty(config, String.class, CONFIG_PREFIX, "clientLogoutPath", null);
-            this.ssoLoginUrl = getProperty(config, String.class, CONFIG_PREFIX, "ssoLoginUrl", null);
-            this.redirectUrl = getProperty(config, String.class, CONFIG_PREFIX, "redirectUrl", null);
+            this.clientLogoutPath = getProperty(config, CONFIG_PREFIX, "clientLogoutPath");
+            this.ssoLoginUrl = getProperty(config, CONFIG_PREFIX, "ssoLoginUrl");
+            this.redirectUrl = getProperty(config, CONFIG_PREFIX, "redirectUrl");
             this.sessionIdSignHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "sessionIdSignHmacKey", "dushitaoyuan");
-            if (StrUtil.isEmpty(filterIncludePath) || StrUtil.isEmpty(redirectUrl)) {
-                throw new SSOClientException("filterIncludePath or redirectUrl not config");
-            }
+
             if (StrUtil.isNotEmpty(filterExcludePath)) {
                 this.filterExcludePath = Arrays.stream(filterExcludePath.split(",")).filter(StrUtil::isNotEmpty).collect(Collectors.toList());
             }

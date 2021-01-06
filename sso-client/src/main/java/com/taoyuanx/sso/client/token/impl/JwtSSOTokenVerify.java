@@ -15,16 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author dushitaoyuan
  * @date 2020/12/29
- * jwt session 实现
+ * jwt token校验 实现
  */
 @Slf4j
-public class JwtSessionManager extends AbstractSSOTokenVerify {
+public class JwtSSOTokenVerify extends AbstractSSOTokenVerify {
 
-    private Long sessionTimeOut;
     private Algorithm algorithm;
 
-    public JwtSessionManager(Algorithm algorithm, Long sessionTimeOut) {
-        this.sessionTimeOut = sessionTimeOut;
+    public JwtSSOTokenVerify(Algorithm algorithm) {
         this.algorithm = algorithm;
     }
 

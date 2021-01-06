@@ -15,13 +15,13 @@ import java.util.Objects;
 /**
  * @author dushitaoyuan
  * @date 2020/12/29
- * 自定义token session 实现
+ * 自定义token  实现
  */
 @Slf4j
-public class MyTokenSessionManager extends AbstractSSOTokenVerify {
+public class MySSOTokenVerify extends AbstractSSOTokenVerify {
     private IVerifySign verifySign;
 
-    public MyTokenSessionManager(IVerifySign verifySign) {
+    public MySSOTokenVerify(IVerifySign verifySign) {
         this.verifySign = verifySign;
     }
 

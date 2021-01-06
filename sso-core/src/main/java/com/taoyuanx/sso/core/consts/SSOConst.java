@@ -14,10 +14,19 @@ public class SSOConst {
     public static final String SSO_REDIRECT_URL = "redirectUrl";
 
 
+    public static final String SSO_SESSION_TOKEN = "sessionToken";
+
+
     public static final String SSO_REFRESH_TOKEN = "refreshToken";
 
 
     public static final String SSO_TOKEN_EXPIRE = "expire";
+
+
+    public  static  final String SESSION_MODE_CLIENT="client_session";
+
+    public  static  final String SESSION_MODE_SERVER="server_session";
+
 
     /**
      * sso 服务异常

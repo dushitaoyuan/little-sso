@@ -11,6 +11,7 @@ import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOClientImpl;
 import com.taoyuanx.sso.client.impl.SSOTokenClient;
+import com.taoyuanx.sso.client.token.SSOTokenResult;
 import com.taoyuanx.sso.client.utils.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,7 +76,9 @@ public class SSOTokenFilter implements Filter {
              * filter will proxy the refresh api
              */
             if (matchRefresh(requestURI, method)) {
-
+                String refreshToken = RequestUtil.getHeaderOrParamValue(request, SSOClientConstant.SSO_REFRESH_TOKEN);
+                SSOTokenResult ssoTokenResult = ssoTokenClient.refreshToken(refreshToken);
+                ResponseUtil.responseJson(response, JSON.toJSONString(ssoTokenResult), 200);
                 return;
             }
             /**

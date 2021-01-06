@@ -6,7 +6,6 @@ import lombok.Data;
 public class SSOTokenResult {
     public static final Integer TOKEN_TYPE_SESSION = 1;
     public static final Integer TOKEN_TYPE_REFRESH = 2;
-
     private String sessionToken;
     /**
      * 刷新token

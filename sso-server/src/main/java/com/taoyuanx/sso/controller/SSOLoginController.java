@@ -167,7 +167,7 @@ public class SSOLoginController {
              *  token 过期前调 用refresh接口获取新的token
              */
             sessionManager.createSession(ssoTokenUser);
-            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, ssoProperties.getSessionKeyName(), ssoTokenUser.getSessionId());
+            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_SESSION_TOKEN, ssoTokenUser.getSessionId());
             redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
             redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_TOKEN_EXPIRE, String.valueOf(ssoTokenUser.getExpire()));
             Map loginResult = new HashMap<>();
@@ -199,14 +199,14 @@ public class SSOLoginController {
             ssoTokenUser.setUsername(ssoUser.getUsername());
             sessionManager.createSession(ssoTokenUser);
             Map refreshResult = new HashMap<>();
-            refreshResult.put(ssoProperties.getSessionKeyName(), ssoUser.getSessionId());
+            refreshResult.put(SSOConst.SSO_SESSION_TOKEN, ssoUser.getSessionId());
             refreshResult.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
             refreshResult.put(SSOConst.SSO_TOKEN_EXPIRE, ssoTokenUser.getExpire());
             return ResultBuilder.success(refreshResult);
         } catch (SSOException e) {
             throw e;
         } catch (Exception e) {
-            log.error("登录失败", e);
+            log.error("refresh失败", e);
             throw new SSOException("续期失败");
         }
     }
