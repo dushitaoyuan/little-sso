@@ -82,7 +82,7 @@ public class SSOTokenFilter implements Filter {
              * client need refresh
              * filter will proxy the refresh api
              */
-            if (matchRefresh(requestURI, method)) {
+            if (matchRefresh(requestURI)) {
                 String refreshToken = RequestUtil.getHeaderOrParamValue(request, SSOClientConstant.SSO_REFRESH_TOKEN);
                 SSOTokenResult ssoTokenResult = ssoTokenClient.refreshToken(refreshToken);
                 Result result = new Result();
@@ -103,7 +103,7 @@ public class SSOTokenFilter implements Filter {
                 return;
             }
         } catch (SSOTokenException e) {
-            log.debug("token filter error", e.getMessage());
+            log.debug("token filter error", e);
             checkLoginFailedHandler(request, response);
             return;
         }
@@ -145,7 +145,7 @@ public class SSOTokenFilter implements Filter {
         return false;
     }
 
-    private boolean matchRefresh(String requestURI, String method) {
+    private boolean matchRefresh(String requestURI) {
         if (Objects.nonNull(ssoClientConfig.getTokenRefreshPath()) && antPathMatcher.match(ssoClientConfig.getTokenRefreshPath(), requestURI)) {
             return true;
         }

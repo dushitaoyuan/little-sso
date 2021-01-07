@@ -41,7 +41,7 @@ public class MyTokenSessionManager implements TokenSessionManager {
     @Override
     public SSOTokenUser getSSOUser(String sessionId) {
         SSOToken ssoToken = simpleTokenManager.parseToken(sessionId, SSOToken.class);
-        return sessionTokenToSSOUser(sessionId, ssoToken);
+        return sessionTokenToSSOUser(ssoToken);
     }
 
     @Override
@@ -62,6 +62,8 @@ public class MyTokenSessionManager implements TokenSessionManager {
         ssoToken.setCreateTime(now);
         ssoToken.setType(TokenSessionManager.TOKEN_TYPE_SESSION);
         String sessionToken = simpleTokenManager.createToken(ssoToken);
+
+
         ssoToken.setType(TokenSessionManager.TOKEN_TYPE_REFRESH);
         ssoToken.setEndTime(ssoToken.getEndTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut + expireWindow * 2) / 2);
         String refreshToken = simpleTokenManager.createToken(ssoToken);
@@ -69,16 +71,14 @@ public class MyTokenSessionManager implements TokenSessionManager {
 
         ssoTokenUser.setSessionId(sessionToken);
         ssoTokenUser.setRefreshToken(refreshToken);
-        ssoTokenUser.setExpire(sessionTimeOut);
-        ssoTokenUser.setSessionId(sessionToken);
+        ssoTokenUser.setExpire(sessionTimeOut * 60);
 
 
     }
 
-    private SSOTokenUser sessionTokenToSSOUser(String sessionId, SSOToken ssoToken) {
+    private SSOTokenUser sessionTokenToSSOUser(SSOToken ssoToken) {
         SSOTokenUser ssoTokenUser = JSONUtil.parseObject(ssoToken.getSessionData(), SSOTokenUser.class);
-        ssoTokenUser.setSessionId(sessionId);
-        ssoTokenUser.setExpire(sessionTimeOut);
+        ssoTokenUser.setExpire(sessionTimeOut * 60);
         ssoTokenUser.setTokenType(ssoToken.getType());
         return ssoTokenUser;
     }

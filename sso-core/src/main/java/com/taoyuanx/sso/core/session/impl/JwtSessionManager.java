@@ -77,7 +77,7 @@ public class JwtSessionManager implements TokenSessionManager {
         int expireWindow = 5;
         String sessionToken = JWT.create()
                 .withNotBefore(now)
-                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut+expireWindow)))
+                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut + expireWindow)))
                 .withIssuedAt(now)
                 .withSubject(ssoUser.getUsername())
                 .withClaim("type", TokenSessionManager.TOKEN_TYPE_SESSION)
@@ -86,7 +86,7 @@ public class JwtSessionManager implements TokenSessionManager {
 
         String refreshToken = JWT.create()
                 .withNotBefore(now)
-                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut+expireWindow)))
+                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut + expireWindow)))
                 .withIssuedAt(now)
                 .withSubject(ssoUser.getUsername())
                 .withClaim("type", TokenSessionManager.TOKEN_TYPE_REFRESH)
@@ -94,12 +94,11 @@ public class JwtSessionManager implements TokenSessionManager {
                 .sign(algorithm);
         ssoTokenUser.setSessionId(sessionToken);
         ssoTokenUser.setRefreshToken(refreshToken);
-        ssoTokenUser.setExpire(sessionTimeOut);
+        ssoTokenUser.setExpire(sessionTimeOut * 60);
     }
 
     private SSOTokenUser decodeToUser(DecodedJWT decode) {
         SSOTokenUser ssoUser = new SSOTokenUser();
-        ssoUser.setSessionId(decode.getToken());
         ssoUser.setUsername(decode.getSubject());
         ssoUser.setUserId(decode.getClaim("userId").asLong());
         ssoUser.setTokenType(decode.getClaim("type").asInt());

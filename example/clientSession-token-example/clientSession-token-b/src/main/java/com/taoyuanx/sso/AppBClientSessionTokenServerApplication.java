@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author dushitaoyuan
  */
 @SpringBootApplication
-public class AppBNoCookieServerApplication {
+public class AppBClientSessionTokenServerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AppBNoCookieServerApplication.class, args);
+        SpringApplication.run(AppBClientSessionTokenServerApplication.class, args);
     }
 }

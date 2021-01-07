@@ -16,8 +16,8 @@
 <h3>A系统-index-clientSession</h3>
 username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
 
-<a th:href="@{http://localhost:8082/appB?(sessionToken=${ssoUser.sessionId})}">
-    访问B系统,跨系统传递sessionToken
+<a th:href="@{http://localhost:8082/appB?(sessionToken=${sessionToken})}">
+    访问B系统,跨系统传递sessionToken，如有必要也需要传递refreshToken
 </a>
 </br>
 <button onclick="logout()">

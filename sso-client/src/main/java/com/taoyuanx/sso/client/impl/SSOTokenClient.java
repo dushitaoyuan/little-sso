@@ -71,7 +71,7 @@ public class SSOTokenClient {
 
     }
 
-    public void logout(String sessionId) {
+    public void logout(String sessionToken) {
         log.debug("nothing to do");
     }
 

@@ -16,5 +16,6 @@
     <modules>
         <module>cookie-example</module>
         <module>noCookie-example</module>
+        <module>clientSession-token-example</module>
     </modules>
 </project>

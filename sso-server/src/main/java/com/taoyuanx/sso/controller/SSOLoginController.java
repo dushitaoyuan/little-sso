@@ -197,7 +197,7 @@ public class SSOLoginController {
                 ssoTokenUser.setUsername(ssoUser.getUsername());
                 sessionManager.createSession(ssoTokenUser);
                 Map refreshResult = new HashMap<>();
-                refreshResult.put(SSOConst.SSO_SESSION_TOKEN, ssoUser.getSessionId());
+                refreshResult.put(SSOConst.SSO_SESSION_TOKEN, ssoTokenUser.getSessionId());
                 refreshResult.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
                 refreshResult.put(SSOConst.SSO_TOKEN_EXPIRE, ssoTokenUser.getExpire());
                 return ResultBuilder.success(refreshResult);

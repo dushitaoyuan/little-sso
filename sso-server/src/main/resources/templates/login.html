@@ -59,7 +59,7 @@
             data: loginFormData,
             dataType:'json',
             success: function (result) {
-                if (result.success == 1) {
+                if (result.code == 1) {
                     layer.msg('登录成功!', function () {
                         setTimeout(function () {
                             window.location.href = result.data.redirectUrl;

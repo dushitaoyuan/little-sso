@@ -7,46 +7,44 @@
 
     <meta charset="UTF-8"/>
 
-    <title>B系统页面</title>
+    <title>B系统页面-clientSession</title>
 
 </head>
 
 <body>
 
-<h3>B系统-index</h3>
+<h3>B系统-index-clientSession</h3>
 username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
-<a th:href="@{http://localhost:8081/appA?(sso_session_id=${ssoUser.sessionId})}">
-    访问A系统
+
+<a th:href="@{http://localhost:8081/appA?(sessionToken=${sessionToken})}">
+    访问A系统,跨系统传递sessionToken,如有必要也需要传递refreshToken
 </a>
 </br>
-<a th:href="@{http://localhost:8082/appB/logout?(sso_session_id=${ssoUser.sessionId})}">
+<button onclick="logout()">
     退出系统
-</a>
+</button>
 </br>
 <button onclick="getUser()">获取用户信息</button>
 </br>
 用户信息:
 <textarea cols="50" rows="5" id="userInfo"></textarea>
-<input type="hidden" id="sessionId" th:value="${ssoUser.sessionId}">
 
-<script  type="text/javascript" th:src="@{/js/jquery3.4.1.js}"></script>
-
+</br>
+<button onclick="getTokenUserDetail()">获取用户详细信息</button>
+用户详细信息:
+<textarea cols="50" rows="5" id="userInfoDetail"></textarea>
+<input type="hidden" id="sessionToken" th:value="${sessionToken}">
+<input type="hidden" id="refreshToken" th:value="${refreshToken}">
+<input type="hidden" id="expire" th:value="${expire}">
+<script type="text/javascript" th:src="@{/js/jquery3.4.1.js}"></script>
+<script type="text/javascript" th:src="@{/js/webCache.js}"></script>
+<script type="text/javascript" th:src="@{/js/auth.js}"></script>
 <script type="text/javascript">
     /**
-     * 浏览器缓存sessionId,每次请求都自动携带该header,当然,这并不适合浏览器,更适合移动端,由移动端保存
-     * 每次请求都在header中携带sessionId
+     * client端缓存 token
      */
-    localStorage.setItem('sessionId', $("#sessionId").val());
+    storageClientSession($('#sessionToken').val(), $('#refreshToken').val(), parseInt($('#expire').val(), 10))
 
-    $.ajaxSetup({
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader("sso_session_id", localStorage.getItem('sessionId'));
-        },
-        success: function(result) {
-            alert(result);
-        }
-
-    });
     function getUser() {
         $.ajax({
             method: "get",
@@ -54,6 +52,32 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
             dataType: 'json',
             success: function (result) {
                 $("#userInfo").val(JSON.stringify(result));
+            }
+        })
+    }
+
+    function getTokenUserDetail() {
+        $.ajax({
+            method: "get",
+            url: "/appB/userDetail",
+            dataType: 'text',
+            success: function (result) {
+                $("#userInfoDetail").val(result);
+            }
+        })
+    }
+
+    function logout() {
+        $.ajax({
+            method: "get",
+            url: "/appB/logout",
+            dataType: 'json',
+            success: function (result) {
+                if (result.code == 1) {
+                    clearClientSession();
+                    alert("退出成功");
+                }
+
             }
         })
     }
