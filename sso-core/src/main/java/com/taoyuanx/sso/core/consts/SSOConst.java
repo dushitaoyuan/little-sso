@@ -23,9 +23,9 @@ public class SSOConst {
     public static final String SSO_TOKEN_EXPIRE = "expire";
 
 
-    public  static  final String SESSION_MODE_CLIENT="client_session";
+    public static final String SESSION_MODE_CLIENT = "client";
 
-    public  static  final String SESSION_MODE_SERVER="server_session";
+    public static final String SESSION_MODE_SERVER = "server";
 
 
     /**
@@ -36,5 +36,16 @@ public class SSOConst {
      * login check code
      */
     public static final Integer LOGIN_CHECK_FAILED_CODE = 9999;
+
+    /**
+     * session 默认过期时间
+     */
+    public static final Integer DEFAULT_SESSION_TIME_OUT_MINUTE = 8 * 60;
+    /**
+     * cookie path
+     */
     public static final String SSO_COOKIE_PATH = "/";
+
+
+    public static final String DEFAULT_HMAC_KEY = "dushitaoyuan";
 }

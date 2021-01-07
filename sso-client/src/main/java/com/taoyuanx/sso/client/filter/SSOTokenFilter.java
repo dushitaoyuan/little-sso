@@ -7,12 +7,14 @@ import com.taoyuanx.sso.client.core.SSOClientConfig;
 import com.taoyuanx.sso.client.core.SSOClientConstant;
 import com.taoyuanx.sso.client.core.sign.sign.impl.HMacVerifySign;
 import com.taoyuanx.sso.client.ex.SSOTokenException;
-import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
-import com.taoyuanx.sso.client.impl.SSOClient;
-import com.taoyuanx.sso.client.impl.SSOClientImpl;
 import com.taoyuanx.sso.client.impl.SSOTokenClient;
+import com.taoyuanx.sso.client.token.AbstractSSOTokenVerify;
 import com.taoyuanx.sso.client.token.SSOTokenResult;
-import com.taoyuanx.sso.client.utils.*;
+import com.taoyuanx.sso.client.token.impl.MySSOTokenVerify;
+import com.taoyuanx.sso.client.utils.AntPathMatcher;
+import com.taoyuanx.sso.client.utils.RequestUtil;
+import com.taoyuanx.sso.client.utils.ResponseUtil;
+import com.taoyuanx.sso.client.utils.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.*;
@@ -49,6 +51,11 @@ public class SSOTokenFilter implements Filter {
         this.ssoTokenClient = ssoClient;
     }
 
+    public SSOTokenFilter(SSOClientConfig ssoClientConfig, AbstractSSOTokenVerify ssoTokenVerify) {
+        this.ssoClientConfig = ssoClientConfig;
+        this.ssoTokenClient = new SSOTokenClient(ssoClientConfig, ssoTokenVerify);
+    }
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
@@ -59,7 +66,7 @@ public class SSOTokenFilter implements Filter {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = ssoTokenClient.getSessionId(request);
+        String sessionToken = ssoTokenClient.getSessionToken(request);
         try {
             /**
              *
@@ -78,14 +85,17 @@ public class SSOTokenFilter implements Filter {
             if (matchRefresh(requestURI, method)) {
                 String refreshToken = RequestUtil.getHeaderOrParamValue(request, SSOClientConstant.SSO_REFRESH_TOKEN);
                 SSOTokenResult ssoTokenResult = ssoTokenClient.refreshToken(refreshToken);
-                ResponseUtil.responseJson(response, JSON.toJSONString(ssoTokenResult), 200);
+                Result result = new Result();
+                result.setCode(Result.SUCCESS_CODE);
+                result.setData(JSON.toJSONString(ssoTokenResult));
+                ResponseUtil.responseJson(response, JSON.toJSONString(result), 200);
                 return;
             }
             /**
              *  match url check isLogin
              */
             if (isPathFilter(requestURI)) {
-                if (ssoTokenClient.verifySessionToken(token)) {
+                if (ssoTokenClient.verifySessionToken(sessionToken)) {
                     filterChain.doFilter(request, response);
                     return;
                 }
@@ -93,7 +103,7 @@ public class SSOTokenFilter implements Filter {
                 return;
             }
         } catch (SSOTokenException e) {
-            log.debug("token [" + token + "] is invalid", e);
+            log.debug("token filter error", e.getMessage());
             checkLoginFailedHandler(request, response);
             return;
         }
@@ -136,9 +146,8 @@ public class SSOTokenFilter implements Filter {
     }
 
     private boolean matchRefresh(String requestURI, String method) {
-        if (Objects.nonNull(ssoClientConfig.getClientLogoutPath()) && antPathMatcher.match(ssoClientConfig.getClientLogoutPath(), requestURI)) {
-            String clientLogoutMethod = ssoClientConfig.getClientLogoutMethod();
-            return StrUtil.isEmpty(clientLogoutMethod) || method.equalsIgnoreCase(clientLogoutMethod);
+        if (Objects.nonNull(ssoClientConfig.getTokenRefreshPath()) && antPathMatcher.match(ssoClientConfig.getTokenRefreshPath(), requestURI)) {
+            return true;
         }
         return false;
     }
@@ -181,10 +190,9 @@ public class SSOTokenFilter implements Filter {
             } else {
                 ssoClientConfig = new SSOClientConfig();
             }
-
         }
         if (Objects.nonNull(ssoTokenClient)) {
-            ssoTokenClient = new SSOTokenClient(ssoClientConfig, null);
+            ssoTokenClient = new SSOTokenClient(ssoClientConfig, new MySSOTokenVerify(new HMacVerifySign(ssoClientConfig.getClientSessionTokenHmacKey().getBytes())));
         }
     }
 

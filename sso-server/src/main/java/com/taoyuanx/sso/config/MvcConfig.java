@@ -5,6 +5,7 @@ import com.taoyuanx.sso.core.consts.SSOConst;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
 import com.taoyuanx.sso.core.exception.SSOException;
+import com.taoyuanx.sso.core.exception.SSOTokenException;
 import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
 import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.utils.JSONUtil;
@@ -76,11 +77,13 @@ public class MvcConfig implements WebMvcConfigurer, ResponseBodyAdvice<Object> {
         }
         if (e instanceof SSOException) {
             httpStatus = 200;
-        }
-        if (e instanceof SessionManager) {
+        }else if (e instanceof SessionIdInvalidException ) {
             httpStatus = 200;
             code = SSOConst.LOGIN_CHECK_FAILED_CODE;
-        } else {
+        } else if (e instanceof SSOTokenException) {
+            httpStatus = 200;
+            code = SSOConst.LOGIN_CHECK_FAILED_CODE;
+        }else {
             log.error("系统异常", e);
             msg = "系统异常";
         }

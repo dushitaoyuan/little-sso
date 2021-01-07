@@ -8,7 +8,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.taoyuanx.sso.core.dto.SSOTokenUser;
 import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
-import com.taoyuanx.sso.core.exception.TokenException;
 import com.taoyuanx.sso.core.session.TokenSessionManager;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,9 +73,11 @@ public class JwtSessionManager implements TokenSessionManager {
     private void createSessionToken(SSOUser ssoUser) {
         SSOTokenUser ssoTokenUser = (SSOTokenUser) ssoUser;
         Date now = new Date();
+        //过期时间宽松五分钟
+        int expireWindow = 5;
         String sessionToken = JWT.create()
                 .withNotBefore(now)
-                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut)))
+                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut+expireWindow)))
                 .withIssuedAt(now)
                 .withSubject(ssoUser.getUsername())
                 .withClaim("type", TokenSessionManager.TOKEN_TYPE_SESSION)
@@ -85,7 +86,7 @@ public class JwtSessionManager implements TokenSessionManager {
 
         String refreshToken = JWT.create()
                 .withNotBefore(now)
-                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut)))
+                .withExpiresAt(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut+expireWindow)))
                 .withIssuedAt(now)
                 .withSubject(ssoUser.getUsername())
                 .withClaim("type", TokenSessionManager.TOKEN_TYPE_REFRESH)

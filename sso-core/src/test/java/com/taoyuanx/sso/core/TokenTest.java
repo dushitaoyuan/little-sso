@@ -51,37 +51,8 @@ public class TokenTest {
 
     }
 
-    @Test
-    public void sessionIdTest() throws Exception {
-        SessionIdGenerate mixSessionIdGenerate = new DefaultSignSessionIdGenerate(new HMacSign("123".getBytes()), true);
 
 
-        SSOUser ssoUser = new SSOUser();
-        ssoUser.setUserId(1L);
-        SessionIdGenerate notMixSessionIdGenerate = new DefaultSignSessionIdGenerate(new HMacSign("123".getBytes()));
-        KeyStore keyStore = RSAUtil.getKeyStore(this.getClass().getClassLoader().getResourceAsStream("client.p12"), "123456");
-        RSAPublicKey publicKey = RSAUtil.getPublicKey(keyStore);
-        RSAPrivateKey privateKey = RSAUtil.getPrivateKey(keyStore, "123456");
-        SessionIdGenerate rsaSessionIdGenerate = new DefaultSignSessionIdGenerate(new RsaSign(publicKey, privateKey, "SHA256WITHRSA"), true);
-
-        Assert.assertNotEquals(mixSessionIdGenerate.generateSessionId(ssoUser), mixSessionIdGenerate.generateSessionId(ssoUser));
-        Assert.assertEquals(notMixSessionIdGenerate.generateSessionId(ssoUser), notMixSessionIdGenerate.generateSessionId(ssoUser));
-        System.out.println(rsaSessionIdGenerate.generateSessionId(ssoUser));
-        System.out.println(rsaSessionIdGenerate.generateSessionId(ssoUser));
-        System.out.println(mixSessionIdGenerate.isSessionIdValid(mixSessionIdGenerate.generateSessionId(ssoUser)));
-
-    }
-    @Test
-    public void tokenSessionTest() {
-        SSOUser ssoUser = new SSOUser();
-        ssoUser.setUserId(1L);
-        ssoUser.setUsername("dushitaoyuan");
-        MyTokenSessionManager myTokenSessionManager = new MyTokenSessionManager(new SimpleTokenManager(new HMacSign("12345".getBytes())), 30L);
-        String generate = myTokenSessionManager.generateSessionId(ssoUser);
-        myTokenSessionManager.isLogin(generate);
-        System.out.println(generate);
-        
-    }
 
     @Test
     public void jwtTest() throws Exception {

@@ -16,9 +16,9 @@ public class SSOProperties {
     /**
      * session 过期时间 单位分钟
      */
-    private Integer sessionTimeOut;
+    private Integer sessionTimeOut = SSOConst.DEFAULT_SESSION_TIME_OUT_MINUTE;
 
-    private String sessionIdSignHmacKey;
+    private String sessionIdSignHmacKey = SSOConst.DEFAULT_HMAC_KEY;
 
 
     private String sessionIdCookieDomain;
@@ -35,8 +35,10 @@ public class SSOProperties {
 
 
     /**
-     * 服务端会话管理模式是否为 token
+     * 会话模式 client or server
      */
-    private boolean tokenSessionEnable;
+    private String sessionMode = SSOConst.SESSION_MODE_SERVER;
 
+
+    private String clientSessionTokenHmacKey = SSOConst.DEFAULT_HMAC_KEY;
 }

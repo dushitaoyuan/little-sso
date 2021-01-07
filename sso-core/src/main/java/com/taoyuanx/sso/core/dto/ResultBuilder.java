@@ -6,23 +6,25 @@ package com.taoyuanx.sso.core.dto;
 public class ResultBuilder {
 
     public static Result success(Object data) {
-        return Result.build().buildData(data).buildSuccess(ResultCode.OK.code);
+        return Result.build().buildData(data).buildCode(ResultCode.OK.code);
     }
-
 
 
     public static Result success() {
-        return Result.build().buildSuccess(ResultCode.OK.code);
+        return Result.build().buildCode(ResultCode.OK.code);
+    }
+
+    public static Result successData(String data) {
+        return Result.build().buildData(data).buildCode(ResultCode.OK.code);
     }
 
     public static Result success(String msg) {
-        return Result.build().buildSuccess(ResultCode.OK.code).buildMsg(msg);
+        return Result.build().buildCode(ResultCode.OK.code).buildMsg(msg);
     }
 
 
-
     public static Result failed(String msg) {
-        return Result.build().buildSuccess(ResultCode.FAIL.code).buildMsg(msg);
+        return Result.build().buildCode(ResultCode.FAIL.code).buildMsg(msg);
     }
 
 

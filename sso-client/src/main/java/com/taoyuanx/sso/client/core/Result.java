@@ -22,7 +22,6 @@ import java.util.Objects;
 public class Result implements Serializable {
     private Integer code;
     private String msg;
-    private Integer success;
     private String data;
     private String ext;
     /**
@@ -30,9 +29,9 @@ public class Result implements Serializable {
      */
     private Response response;
 
-    public  static  final Integer SUCCESS_CODE=1;
+    public static final Integer SUCCESS_CODE = 1;
 
     public boolean success() {
-        return Objects.nonNull(success) && success.equals(1);
+        return Objects.nonNull(code) && code.equals(1);
     }
 }

@@ -40,7 +40,7 @@ public class MySSOTokenVerify extends AbstractSSOTokenVerify {
         }
         byte[] data = Base64.decodeBase64(split[0]);
         SSOToken tokenObj = JSON.parseObject(data, SSOToken.class);
-        return tokenObj.getSsoUser();
+        return JSON.parseObject(tokenObj.getSsoUser(), SSOUser.class);
     }
 
     @Override
@@ -55,6 +55,10 @@ public class MySSOTokenVerify extends AbstractSSOTokenVerify {
         byte[] data = Base64.decodeBase64(split[0]);
         byte[] sign = Base64.decodeBase64(split[1]);
         SSOToken tokenObj = JSON.parseObject(data, SSOToken.class);
+
+        if (Objects.nonNull(matchTokenType) && !matchTokenType.equals(tokenObj.getType())) {
+            throw new SSOTokenException("token 类型 非法");
+        }
         long now = System.currentTimeMillis();
         Long start = tokenObj.getEffectTime();
         if (Objects.nonNull(start) && start > now) {

@@ -5,10 +5,9 @@ import com.taoyuanx.sso.core.consts.SSOConst;
 import com.taoyuanx.sso.core.dto.Result;
 import com.taoyuanx.sso.core.dto.ResultBuilder;
 import com.taoyuanx.sso.core.dto.SSOTokenUser;
-import com.taoyuanx.sso.core.dto.SSOUser;
 import com.taoyuanx.sso.core.exception.SSOException;
+import com.taoyuanx.sso.core.exception.SSOTokenException;
 import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
-import com.taoyuanx.sso.core.session.SessionIdGenerate;
 import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.session.TokenSessionManager;
 import com.taoyuanx.sso.core.utils.CookieUtil;
@@ -74,6 +73,8 @@ public class SSOLoginController {
             if (ssoProperties.isEnableCookie()) {
                 CookieUtil.deleteCookieValue(request, response, ssoProperties.getSessionKeyName(), ssoProperties.getSessionIdCookieDomain(), SSOConst.SSO_COOKIE_PATH);
             }
+        } catch (SSOTokenException e) {
+            log.error("token  is error", e.getMessage());
         }
         modelAndView.addObject(SSOConst.SSO_REDIRECT_URL, redirectUrl);
         modelAndView.setViewName("login");
@@ -101,7 +102,7 @@ public class SSOLoginController {
             redirectUrl = dbUser.getLoginRedirectUrl();
         }
 
-        if (ssoProperties.isTokenSessionEnable()) {
+        if (ssoProperties.getSessionMode().equals(SSOConst.SESSION_MODE_CLIENT)) {
             SSOTokenUser ssoTokenUser = new SSOTokenUser();
             ssoTokenUser.setUserId(dbUser.getId());
             ssoTokenUser.setUsername(dbUser.getUsername());
@@ -109,7 +110,6 @@ public class SSOLoginController {
              * 分布式session example:jwt
              */
             return tokenSessionSuccessHandler(ssoTokenUser, redirectUrl, response);
-
         } else {
             LoginUserVo loginUserVo = new LoginUserVo();
             loginUserVo.setUserEntity(dbUser);
@@ -182,27 +182,27 @@ public class SSOLoginController {
     /**
      * 续期处理
      */
-    @PostMapping("/refresh")
+    @PostMapping("/token/refresh")
     @ResponseBody
     public Result refresh(HttpServletRequest request) {
         try {
-            if (!ssoProperties.isTokenSessionEnable()) {
-                throw new SSOException("接口未启用");
+            if (ssoProperties.getSessionMode().equals(SSOConst.SESSION_MODE_CLIENT)) {
+                String refreshToken = request.getParameter(SSOConst.SSO_REFRESH_TOKEN);
+                SSOTokenUser ssoUser = (SSOTokenUser) sessionManager.getSSOUser(refreshToken);
+                if (!ssoUser.getTokenType().equals(TokenSessionManager.TOKEN_TYPE_REFRESH)) {
+                    throw new SSOException("tokenType 不匹配");
+                }
+                SSOTokenUser ssoTokenUser = new SSOTokenUser();
+                ssoTokenUser.setUserId(ssoUser.getUserId());
+                ssoTokenUser.setUsername(ssoUser.getUsername());
+                sessionManager.createSession(ssoTokenUser);
+                Map refreshResult = new HashMap<>();
+                refreshResult.put(SSOConst.SSO_SESSION_TOKEN, ssoUser.getSessionId());
+                refreshResult.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
+                refreshResult.put(SSOConst.SSO_TOKEN_EXPIRE, ssoTokenUser.getExpire());
+                return ResultBuilder.success(refreshResult);
             }
-            String refreshToken = request.getParameter(SSOConst.SSO_REFRESH_TOKEN);
-            SSOTokenUser ssoUser = (SSOTokenUser) sessionManager.getSSOUser(refreshToken);
-            if (ssoUser.getTokenType().equals(TokenSessionManager.TOKEN_TYPE_REFRESH)) {
-                throw new SSOException("tokenType 不匹配");
-            }
-            SSOTokenUser ssoTokenUser = new SSOTokenUser();
-            ssoTokenUser.setUserId(ssoUser.getUserId());
-            ssoTokenUser.setUsername(ssoUser.getUsername());
-            sessionManager.createSession(ssoTokenUser);
-            Map refreshResult = new HashMap<>();
-            refreshResult.put(SSOConst.SSO_SESSION_TOKEN, ssoUser.getSessionId());
-            refreshResult.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
-            refreshResult.put(SSOConst.SSO_TOKEN_EXPIRE, ssoTokenUser.getExpire());
-            return ResultBuilder.success(refreshResult);
+            throw new SSOTokenException("接口未启用");
         } catch (SSOException e) {
             throw e;
         } catch (Exception e) {

@@ -34,6 +34,9 @@ public class OkHttpUtil {
                     if (result.getClass().equals(type)) {
                         return (T) result;
                     }
+                    if (String.class.equals(type)) {
+                        return (T) result.getData();
+                    }
                     String data = result.getData();
                     if (StrUtil.isNotEmpty(data)) {
                         return JSON.parseObject(data, type);

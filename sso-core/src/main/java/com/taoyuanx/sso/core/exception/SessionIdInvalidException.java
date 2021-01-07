@@ -1,11 +1,10 @@
 package com.taoyuanx.sso.core.exception;
 
 
-
 /**
  * @author dushitaoyuan
  */
-public class SessionIdInvalidException extends RuntimeException {
+public class SessionIdInvalidException extends SSOException {
     public SessionIdInvalidException() {
         super("sessionId invalid");
     }

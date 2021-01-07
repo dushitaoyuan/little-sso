@@ -3,9 +3,6 @@ package com.taoyuanx.sso.core.session.impl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.taoyuanx.sso.core.dto.SSOTokenUser;
 import com.taoyuanx.sso.core.dto.SSOUser;
-import com.taoyuanx.sso.core.exception.SSOException;
-import com.taoyuanx.sso.core.exception.SessionIdInvalidException;
-import com.taoyuanx.sso.core.exception.TokenException;
 import com.taoyuanx.sso.core.session.TokenSessionManager;
 import com.taoyuanx.sso.core.token.SimpleTokenManager;
 import com.taoyuanx.sso.core.token.SuperToken;
@@ -58,13 +55,15 @@ public class MyTokenSessionManager implements TokenSessionManager {
         SSOToken ssoToken = new SSOToken();
         Long now = System.currentTimeMillis();
         ssoToken.setEffectTime(now);
-        ssoToken.setEndTime(now + TimeUnit.MINUTES.toMillis(sessionTimeOut));
+        //过期时间宽松五分钟
+        int expireWindow = 5;
+        ssoToken.setEndTime(now + TimeUnit.MINUTES.toMillis(sessionTimeOut + expireWindow));
         ssoToken.setSessionData(JSONUtil.toJsonString(ssoUser));
         ssoToken.setCreateTime(now);
         ssoToken.setType(TokenSessionManager.TOKEN_TYPE_SESSION);
         String sessionToken = simpleTokenManager.createToken(ssoToken);
         ssoToken.setType(TokenSessionManager.TOKEN_TYPE_REFRESH);
-        ssoToken.setEndTime(ssoToken.getEndTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut) / 2);
+        ssoToken.setEndTime(ssoToken.getEndTime() + TimeUnit.MINUTES.toMillis(sessionTimeOut + expireWindow * 2) / 2);
         String refreshToken = simpleTokenManager.createToken(ssoToken);
 
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="Thymeleaf"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head>
+
+    <meta charset="UTF-8"/>
+
+    <title>A系统页面-clientSession</title>
+
+</head>
+
+<body>
+
+<h3>A系统-index-clientSession</h3>
+username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
+
+<a th:href="@{http://localhost:8082/appB?(sessionToken=${ssoUser.sessionId})}">
+    访问B系统,跨系统传递sessionToken
+</a>
+</br>
+<button onclick="logout()">
+    退出系统
+</button>
+</br>
+<button onclick="getUser()">获取用户信息</button>
+</br>
+用户信息:
+<textarea cols="50" rows="5" id="userInfo"></textarea>
+
+</br>
+<button onclick="getTokenUserDetail()">获取用户详细信息</button>
+用户详细信息:
+<textarea cols="50" rows="5" id="userInfoDetail"></textarea>
+<input type="hidden" id="sessionToken" th:value="${sessionToken}">
+<input type="hidden" id="refreshToken" th:value="${refreshToken}">
+<input type="hidden" id="expire" th:value="${expire}">
+<script type="text/javascript" th:src="@{/js/jquery3.4.1.js}"></script>
+<script type="text/javascript" th:src="@{/js/webCache.js}"></script>
+<script type="text/javascript" th:src="@{/js/auth.js}"></script>
+<script type="text/javascript">
+    /**
+     * client端缓存 token
+     */
+    storageClientSession($('#sessionToken').val(), $('#refreshToken').val(), parseInt($('#expire').val(), 10))
+
+    function getUser() {
+        $.ajax({
+            method: "get",
+            url: "/appA/user",
+            dataType: 'json',
+            success: function (result) {
+                $("#userInfo").val(JSON.stringify(result));
+            }
+        })
+    }
+
+    function getTokenUserDetail() {
+        $.ajax({
+            method: "get",
+            url: "/appA/userDetail",
+            dataType: 'text',
+            success: function (result) {
+                $("#userInfoDetail").val(result);
+            }
+        })
+    }
+
+    function logout() {
+        $.ajax({
+            method: "get",
+            url: "/appA/logout",
+            dataType: 'json',
+            success: function (result) {
+                if (result.code == 1) {
+                    clearClientSession();
+                    alert("退出成功");
+                }
+
+            }
+        })
+    }
+</script>
+</body>
+
+</html>

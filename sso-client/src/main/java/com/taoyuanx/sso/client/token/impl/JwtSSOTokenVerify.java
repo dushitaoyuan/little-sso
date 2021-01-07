@@ -8,7 +8,6 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.taoyuanx.sso.client.dto.SSOUser;
 import com.taoyuanx.sso.client.ex.SSOTokenException;
-import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
 import com.taoyuanx.sso.client.token.AbstractSSOTokenVerify;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +49,7 @@ public class JwtSSOTokenVerify extends AbstractSSOTokenVerify {
             verifier.verify(token);
             return true;
         } catch (JWTVerificationException e) {
-            throw new SessionIdInvalidClientException(e);
+            throw new SSOTokenException(e);
         }
     }
 

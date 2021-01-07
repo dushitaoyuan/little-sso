@@ -6,7 +6,6 @@ import com.taoyuanx.sso.client.core.Result;
 import com.taoyuanx.sso.client.core.SSOClientConfig;
 import com.taoyuanx.sso.client.core.SSOClientConstant;
 import com.taoyuanx.sso.client.core.sign.sign.impl.HMacVerifySign;
-import com.taoyuanx.sso.client.ex.SSOClientException;
 import com.taoyuanx.sso.client.ex.SessionIdInvalidClientException;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOClientImpl;

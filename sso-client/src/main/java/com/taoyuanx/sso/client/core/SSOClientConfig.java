@@ -82,16 +82,25 @@ public class SSOClientConfig {
     private String sessionIdSignHmacKey;
 
 
+    /**
+     * 是否为cookie模式 当sessionMode 为session 生效
+     */
     private boolean enableCookie;
 
     private String sessionIdCookieDomain;
 
-
+    /**
+     * client session token过期刷新proxy path
+     */
     private String tokenRefreshPath;
 
-
+    /**
+     * @see SSOClientConstant
+     */
     private String sessionMode;
 
+
+    private String clientSessionTokenHmacKey;
 
     public SSOClientConfig() {
         this(DEFAULT_CONFIG);
@@ -102,7 +111,6 @@ public class SSOClientConfig {
             Properties config = new Properties();
             config.load(ClientConfig.class.getClassLoader().getResourceAsStream(configPath));
             this.ssoServer = getProperty(config, CONFIG_PREFIX, "ssoServer");
-
 
             this.sessionMode = getProperty(config, String.class, CONFIG_PREFIX, "sessionMode", SSOClientConstant.SESSION_MODE_SERVER);
             if (this.sessionMode.equals(SSOClientConstant.SESSION_MODE_CLIENT)) {
@@ -122,8 +130,8 @@ public class SSOClientConfig {
             this.clientLogoutPath = getProperty(config, CONFIG_PREFIX, "clientLogoutPath");
             this.ssoLoginUrl = getProperty(config, CONFIG_PREFIX, "ssoLoginUrl");
             this.redirectUrl = getProperty(config, CONFIG_PREFIX, "redirectUrl");
-            this.sessionIdSignHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "sessionIdSignHmacKey", "dushitaoyuan");
-
+            this.sessionIdSignHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "sessionIdSignHmacKey", SSOClientConstant.DEFAULT_HMAC_KEY);
+            this.clientSessionTokenHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "clientSessionTokenHmacKey", SSOClientConstant.DEFAULT_HMAC_KEY);
             if (StrUtil.isNotEmpty(filterExcludePath)) {
                 this.filterExcludePath = Arrays.stream(filterExcludePath.split(",")).filter(StrUtil::isNotEmpty).collect(Collectors.toList());
             }

@@ -8,9 +8,8 @@ import java.io.Serializable;
 /**
  * 统一返回结果
  * <p>
- * errorCode 错误码
+ * code 消息码
  * msg 错误消息
- * success 请求成功标识 1成功,0失败
  * data 结果体
  * ext 扩展信息
  */
@@ -18,7 +17,6 @@ import java.io.Serializable;
 public class Result implements Serializable {
     private Integer code;
     private String msg;
-    private Integer success;
     private Object data;
     private Object ext;
 
@@ -36,10 +34,6 @@ public class Result implements Serializable {
         return this;
     }
 
-    public Result buildSuccess(Integer success) {
-        this.setSuccess(success);
-        return this;
-    }
 
     public Result buildData(Object data) {
         this.data = data;

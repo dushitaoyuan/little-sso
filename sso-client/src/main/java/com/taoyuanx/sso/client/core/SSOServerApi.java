@@ -9,7 +9,8 @@ public enum SSOServerApi {
     LOGOUT("/sso/logout", "退出"),
 
 
-    TOKEN_REFRESH("/sso/refresh", "clientSession模式token refresh"),
+    TOKEN_REFRESH("/sso/token/refresh", "clientSession模式token refresh"),
+    TOKEN_USER_DETAIL("/sso/token/userDetail", "clientSession模式用户详细数据"),
     ;
     public String path;
     public String desc;

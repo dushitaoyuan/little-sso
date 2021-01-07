@@ -14,7 +14,6 @@ public class SSOClientConstant {
     public static final String REDIRECT_URL = "redirectUrl";
 
 
-
     /**
      * sso 服务异常
      */
@@ -34,7 +33,11 @@ public class SSOClientConstant {
 
     public static final String SSO_TOKEN_EXPIRE = "expire";
 
-    public  static  final String SESSION_MODE_CLIENT="client_session";
+    public static final String SESSION_MODE_CLIENT = "client";
 
-    public  static  final String SESSION_MODE_SERVER="server_session";
+    public static final String SESSION_MODE_SERVER = "server";
+
+
+    public static final String DEFAULT_HMAC_KEY = "dushitaoyuan";
+
 }

@@ -1,7 +1,7 @@
 package com.taoyuanx.sso.core.token;
 
 
-import com.taoyuanx.sso.core.exception.TokenException;
+import com.taoyuanx.sso.core.exception.SSOTokenException;
 import com.taoyuanx.sso.core.token.sign.ISign;
 import com.taoyuanx.sso.core.utils.HelperUtil;
 import com.taoyuanx.sso.core.utils.JSONUtil;
@@ -31,18 +31,18 @@ public class SimpleTokenManager {
             return TokenForamtUtil.format(data, sign);
         } catch (Exception e) {
             log.error("生成token异常", e);
-            throw new TokenException("生成token异常", e);
+            throw new SSOTokenException("生成token异常", e);
         }
     }
 
 
     public <T extends SuperToken> T parseToken(String token, Class<? extends SuperToken> tokenClass) {
         if (HelperUtil.isEmpty(token)) {
-            throw new TokenException("token格式非法");
+            throw new SSOTokenException("token格式非法");
         }
         String[] split = TokenForamtUtil.splitToken(token);
         if (split.length != 2) {
-            throw new TokenException("token格式非法");
+            throw new SSOTokenException("token格式非法");
         }
         byte[] data = Base64.decodeBase64(split[TokenForamtUtil.DATA_INDEX]);
         SuperToken tokenObj = JSONUtil.parseObject(data, tokenClass);
@@ -59,21 +59,21 @@ public class SimpleTokenManager {
 
     public boolean verify(SuperToken token, Integer matchTokenType) {
         if (Objects.nonNull(matchTokenType) && !matchTokenType.equals(token.getType())) {
-            throw new TokenException("token非法");
+            throw new SSOTokenException("token 类型 非法");
         }
         long now = System.currentTimeMillis();
 
         Long start = token.getEffectTime();
         if (Objects.nonNull(start) && start > now) {
-            throw new TokenException("token尚未生效,请耐心等待");
+            throw new SSOTokenException("token尚未生效,请耐心等待");
         }
         Long end = token.getEndTime();
         if (Objects.nonNull(end) && end < now) {
-            throw new TokenException("token过期");
+            throw new SSOTokenException("token过期");
         }
 
         if (!doVerifySign(token.getData(), Base64.decodeBase64(token.getSign()))) {
-            throw new TokenException("token签名非法");
+            throw new SSOTokenException("token签名非法");
         }
         return true;
     }
@@ -93,7 +93,7 @@ public class SimpleTokenManager {
             return this.signImpl.sign(data);
         } catch (Exception e) {
             log.error("签名异常", e);
-            throw new TokenException("签名异常");
+            throw new SSOTokenException("签名异常");
         }
     }
 
@@ -103,7 +103,7 @@ public class SimpleTokenManager {
             return this.signImpl.verifySign(data, signValue);
         } catch (Exception e) {
             log.error("签名异常", e);
-            throw new TokenException("签名异常");
+            throw new SSOTokenException("签名异常");
         }
     }
 

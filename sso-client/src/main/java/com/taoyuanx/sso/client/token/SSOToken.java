@@ -26,7 +26,7 @@ public class SSOToken {
     @JSONField(name = "c")
     private Long createTime;
     @JSONField(name = "d")
-    private SSOUser ssoUser;
+    private String ssoUser;
 
 
 }

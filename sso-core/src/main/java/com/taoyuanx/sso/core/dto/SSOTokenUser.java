@@ -21,4 +21,5 @@ public class SSOTokenUser extends SSOUser {
     private Integer tokenType;
 
 
+
 }
