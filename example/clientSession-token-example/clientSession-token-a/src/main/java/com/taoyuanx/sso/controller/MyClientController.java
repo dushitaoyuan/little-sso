@@ -53,4 +53,9 @@ public class MyClientController {
     public String mySSoToeknUserDetail(HttpServletRequest request) {
         return ssoTokenClient.getSSOTokenUserDetail(ssoTokenClient.getSessionToken(request));
     }
+
+    @GetMapping("logoutPage")
+    public String logoutPage(HttpServletRequest request) {
+        return "logout";
+    }
 }

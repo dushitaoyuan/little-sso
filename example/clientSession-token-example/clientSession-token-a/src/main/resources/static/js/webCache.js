@@ -37,6 +37,15 @@ WebCache.prototype.storageSet = function (cacheKey, cacheValue) {
     }
 }
 WebCache.prototype.get = function (cacheKey) {
+    var cacheItem = this.getCacheItem(cacheKey);
+    if (cacheItem === '') {
+        return cacheItem;
+    }
+    return cacheItem.value;
+
+}
+
+WebCache.prototype.getCacheItem = function (cacheKey) {
     var value = this.storageGet(cacheKey);
     try {
         if (value == '' || value == undefined) {
@@ -45,7 +54,7 @@ WebCache.prototype.get = function (cacheKey) {
         var cacheItem = JSON.parse(value);
         var now = new Date().getTime();
         if (cacheItem.endTime > now) {
-            return cacheItem.value;
+            return cacheItem;
         }
         this.remove(cacheKey);
         return '';
@@ -63,4 +72,18 @@ WebCache.prototype.set = function (cacheKey, cacheValue, expireSeconds) {
     }
     var cacheItem = new CacheItem(cacheValue, expireSeconds);
     this.storageSet(cacheKey, JSON.stringify(cacheItem));
+}
+
+
+WebCache.prototype.getExpire = function (cacheKey) {
+    var cacheItem = this.getCacheItem(cacheKey);
+    if (cacheItem === '') {
+        return 0;
+    }
+    var now = new Date().getTime();
+    var expireSeconds = (cacheItem.endTime - now) / 1000;
+    if (expireSeconds <= 0) {
+        return 0;
+    }
+    return parseInt(expireSeconds,10);
 }

@@ -16,9 +16,9 @@
 <h3>A系统-index-clientSession</h3>
 username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
 
-<a th:href="@{http://localhost:8082/appB?(sessionToken=${sessionToken})}">
-    访问B系统,跨系统传递sessionToken，如有必要也需要传递refreshToken
-</a>
+<button onclick="toAppB()">
+    访问B系统,跨系统传递sessionToken，如有必要也需要传递refreshToken,和expire
+</button>
 </br>
 <button onclick="logout()">
     退出系统
@@ -76,10 +76,18 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
                 if (result.code == 1) {
                     clearClientSession();
                     alert("退出成功");
+                    window.location.href="/appA/logoutPage"
                 }
 
             }
         })
+    }
+
+
+    function toAppB() {
+        autoRefresh();
+        var toUrl = ssoConfig.appBUrl + "sessionToken=" + webCache.get('sessionToken') + "&refreshToken=" + webCache.get('refreshToken') + '&expire=' + webCache.getExpire('sessionToken')
+        window.location.href = toUrl;
     }
 </script>
 </body>

@@ -1,5 +1,10 @@
 var webCache = new WebCache();
-var tokenRefreshUrl = 'http://localhost:8081/appA/refresh';
+
+
+var ssoConfig = {
+    tokenRefreshUrl: '/appA/refresh',
+    appBUrl: "http://localhost:8082/appB?"
+}
 
 
 /**
@@ -34,7 +39,20 @@ $.ajaxSetup({
         } catch (e) {
             console.error("before send error");
         }
-    }
+    },
+    complete: function (xhr, status) {
+        var responseText = xhr.responseText;
+        try {
+            var json = JSON.parse(responseText);
+            if (json.code == 9999 && (json.data.redirectUrl != '' || json.data.redirectUrl != undefined)) {
+                alert('会话过期,请重新登录');
+                window.location.href = json.data.redirectUrl;
+            }
+        } catch (e) {
+            console.warn("ajax error", e);
+        }
+    },
+
 });
 
 function addSessionTokenHeader(xhr) {
@@ -43,8 +61,7 @@ function addSessionTokenHeader(xhr) {
         xhr.setRequestHeader("sessionToken", sessionToken);
         return true;
     }
-    var refreshToken = webCache.get('refreshToken');
-    refresh();
+    autoRefresh();
     var sessionToken = webCache.get('sessionToken');
     if (isNotNull(sessionToken)) {
         xhr.setRequestHeader("sessionToken", sessionToken);
@@ -54,7 +71,14 @@ function addSessionTokenHeader(xhr) {
 
 }
 
-function refresh() {
+function autoRefresh() {
+    /**
+     * session token存在,则,不刷新
+     */
+    var sessionToken = webCache.get('sessionToken');
+    if (isNotNull(sessionToken)) {
+        return;
+    }
     var refreshToken = webCache.get('refreshToken');
     if (isNull(refreshToken)) {
         alert('会话过期,请重新登录');
@@ -63,7 +87,7 @@ function refresh() {
     }
     $.ajax({
         method: "get",
-        url: "/appA/refresh",
+        url: ssoConfig.appBUrl,
         headers: {'refreshToken': refreshToken},
         async: false,
         dataType: 'json',
