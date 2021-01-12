@@ -30,7 +30,7 @@ public class SSOConfig {
     @Bean
     @ConditionalOnProperty(prefix = "sso", name = "sessionMode", havingValue = SSOConst.SESSION_MODE_SERVER)
     public SessionManager redisSessionManager(StringRedisTemplate redisTemplate) {
-        SessionIdGenerate sessionIdGenerate = new DefaultSignSessionIdGenerate(new HMacSign(ssoProperties.getSessionIdSignHmacKey().getBytes()));
+        SessionIdGenerate sessionIdGenerate = new DefaultSignSessionIdGenerate(new HMacSign(ssoProperties.getSessionIdSignHmacKey().getBytes()),true);
         return new RedisSessionManager(redisTemplate, sessionIdGenerate, ssoProperties.getSessionTimeOut() * 60L);
     }
 

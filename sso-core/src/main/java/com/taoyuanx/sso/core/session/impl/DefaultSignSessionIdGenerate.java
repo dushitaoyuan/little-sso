@@ -58,7 +58,7 @@ public class DefaultSignSessionIdGenerate implements SessionIdGenerate {
         if (!this.sign.verifySign(data, sign)) {
             throw new SessionIdInvalidException();
         }
-        return new String(data);
+        return parseMixData(new String(data));
     }
 
     /**
