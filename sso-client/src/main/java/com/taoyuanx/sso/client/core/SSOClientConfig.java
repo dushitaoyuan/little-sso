@@ -105,7 +105,11 @@ public class SSOClientConfig {
     /**
      * redirectUrl 有效性校验key
      */
-    private String redirectUrlSignKey ;
+    private String redirectUrlSignKey;
+    /**
+     * 是否校验
+     */
+    private boolean enableRedirectUrlCheck;
 
     public SSOClientConfig() {
         this(DEFAULT_CONFIG);
@@ -137,7 +141,10 @@ public class SSOClientConfig {
             this.redirectUrl = getProperty(config, CONFIG_PREFIX, "redirectUrl");
             this.sessionIdSignHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "sessionIdSignHmacKey", SSOClientConstant.DEFAULT_HMAC_KEY);
             this.clientSessionTokenHmacKey = getProperty(config, String.class, CONFIG_PREFIX, "clientSessionTokenHmacKey", SSOClientConstant.DEFAULT_HMAC_KEY);
-            this.redirectUrlSignKey = getProperty(config, String.class, CONFIG_PREFIX, "redirectUrlSignKey", SSOClientConstant.DEFAULT_HMAC_KEY);
+            this.redirectUrlSignKey = getProperty(config, String.class, CONFIG_PREFIX, "redirectUrlSignKey", "");
+            if (StrUtil.isNotEmpty(redirectUrlSignKey)) {
+                this.enableRedirectUrlCheck = true;
+            }
             if (StrUtil.isNotEmpty(filterExcludePath)) {
                 this.filterExcludePath = Arrays.stream(filterExcludePath.split(",")).filter(StrUtil::isNotEmpty).collect(Collectors.toList());
             }

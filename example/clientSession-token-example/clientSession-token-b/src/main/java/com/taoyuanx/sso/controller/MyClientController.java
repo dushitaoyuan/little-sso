@@ -35,8 +35,8 @@ public class MyClientController {
      */
     @GetMapping
     public String ssoUser(HttpServletRequest request, Model model) {
-        boolean verifyUrl = UrlUtil.verifyUrl(request, ssoClientConfig.getRedirectUrlSignKey(), ssoClientConfig.getSessionKeyName());
-        if (verifyUrl) {
+        boolean verifyUrl = UrlUtil.verifyUrl(request, ssoClientConfig);
+        if (!verifyUrl) {
             throw new RuntimeException("redirectUrl 无效");
         }
         SSOUser ssoUser = ssoTokenClient.getSSOUser(ssoTokenClient.getSessionToken(request));
