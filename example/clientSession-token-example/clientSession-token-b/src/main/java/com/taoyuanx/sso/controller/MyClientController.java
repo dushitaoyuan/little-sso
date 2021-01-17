@@ -1,9 +1,11 @@
 package com.taoyuanx.sso.controller;
 
+import com.taoyuanx.sso.client.core.SSOClientConfig;
 import com.taoyuanx.sso.client.core.SSOClientConstant;
 import com.taoyuanx.sso.client.dto.SSOUser;
 import com.taoyuanx.sso.client.impl.SSOClient;
 import com.taoyuanx.sso.client.impl.SSOTokenClient;
+import com.taoyuanx.sso.client.utils.UrlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 public class MyClientController {
     @Autowired
     SSOTokenClient ssoTokenClient;
+    @Autowired
+    SSOClientConfig ssoClientConfig;
 
     /**
      * when sso redirect to this url ,the sso-client applicaion must store the sso sessionId
@@ -31,6 +35,10 @@ public class MyClientController {
      */
     @GetMapping
     public String ssoUser(HttpServletRequest request, Model model) {
+        boolean verifyUrl = UrlUtil.verifyUrl(request, ssoClientConfig.getRedirectUrlSignKey(), ssoClientConfig.getSessionKeyName());
+        if (verifyUrl) {
+            throw new RuntimeException("redirectUrl 无效");
+        }
         SSOUser ssoUser = ssoTokenClient.getSSOUser(ssoTokenClient.getSessionToken(request));
         String sessionToken = request.getParameter(SSOClientConstant.SSO_SESSION_TOKEN);
         String refreshToken = request.getParameter(SSOClientConstant.SSO_REFRESH_TOKEN);
@@ -47,6 +55,7 @@ public class MyClientController {
     public SSOUser mySSoUser(HttpServletRequest request) {
         return ssoTokenClient.getSSOUser(ssoTokenClient.getSessionToken(request));
     }
+
     @GetMapping("userDetail")
     @ResponseBody
     public String mySSoToeknUserDetail(HttpServletRequest request) {

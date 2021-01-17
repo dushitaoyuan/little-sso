@@ -12,6 +12,7 @@ import com.taoyuanx.sso.core.session.SessionManager;
 import com.taoyuanx.sso.core.session.TokenSessionManager;
 import com.taoyuanx.sso.core.utils.CookieUtil;
 import com.taoyuanx.sso.core.utils.RequestUtil;
+import com.taoyuanx.sso.core.utils.UrlUtil;
 import com.taoyuanx.sso.dto.LoginForm;
 import com.taoyuanx.sso.entity.UserEntity;
 import com.taoyuanx.sso.service.UserService;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author dushitaoyuan
@@ -146,6 +148,12 @@ public class SSOLoginController {
      */
     private void cookieCentralizedSessionSuccessHandler(LoginUserVo loginUserVo, HttpServletResponse response) throws IOException {
         sessionManager.createSession(loginUserVo);
+        Map<String, String> urlParamMap = new HashMap<>();
+        urlParamMap.put(ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
+        String redirectUrlWithSessionId = UrlUtil.addParamAndSign(loginUserVo.getRedirectUrl(),
+                ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                urlParamMap);
+        loginUserVo.setRedirectUrl(redirectUrlWithSessionId);
         CookieUtil.addCookie(response, ssoProperties.getSessionKeyName(), loginUserVo.getSessionId(), ssoProperties.getSessionIdCookieDomain(), ssoProperties.getSessionTimeOut() * 60, SSOConst.SSO_COOKIE_PATH);
     }
 
@@ -154,7 +162,11 @@ public class SSOLoginController {
      */
     private void paramCentralizedSessionSuccessHandler(LoginUserVo loginUserVo) throws IOException {
         sessionManager.createSession(loginUserVo);
-        String redirectUrlWithSessionId = RequestUtil.addParamToUrl(loginUserVo.getRedirectUrl(), ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
+        Map<String, String> urlParamMap = new HashMap<>();
+        urlParamMap.put(ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
+        String redirectUrlWithSessionId = UrlUtil.addParamAndSign(loginUserVo.getRedirectUrl(),
+                ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                urlParamMap);
         loginUserVo.setRedirectUrl(redirectUrlWithSessionId);
     }
 
@@ -167,9 +179,13 @@ public class SSOLoginController {
              *  token 过期前调 用refresh接口获取新的token
              */
             sessionManager.createSession(ssoTokenUser);
-            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_SESSION_TOKEN, ssoTokenUser.getSessionId());
-            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
-            redirectUrl = RequestUtil.addParamToUrl(redirectUrl, SSOConst.SSO_TOKEN_EXPIRE, String.valueOf(ssoTokenUser.getExpire()));
+            Map<String, String> urlParamMap = new HashMap<>();
+            urlParamMap.put(SSOConst.SSO_SESSION_TOKEN, ssoTokenUser.getSessionId());
+            urlParamMap.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
+            urlParamMap.put(SSOConst.SSO_TOKEN_EXPIRE, String.valueOf(ssoTokenUser.getExpire()));
+            redirectUrl = UrlUtil.addParamAndSign(redirectUrl,
+                    ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                    urlParamMap);
             Map loginResult = new HashMap<>();
             loginResult.put(SSOConst.SSO_REDIRECT_URL, redirectUrl);
             return ResultBuilder.success(loginResult);

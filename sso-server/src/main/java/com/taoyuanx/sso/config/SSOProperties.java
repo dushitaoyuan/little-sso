@@ -41,4 +41,9 @@ public class SSOProperties {
 
 
     private String clientSessionTokenHmacKey = SSOConst.DEFAULT_HMAC_KEY;
+
+    /**
+     * redirectUrl 有效性校验key
+     */
+    private String redirectUrlSignKey = SSOConst.DEFAULT_HMAC_KEY;
 }

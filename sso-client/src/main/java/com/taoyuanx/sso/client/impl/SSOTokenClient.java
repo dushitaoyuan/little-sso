@@ -22,13 +22,11 @@ import javax.servlet.http.HttpServletRequest;
 public class SSOTokenClient {
 
 
-    private String sessionKeyName;
 
     private AbstractSSOTokenVerify ssoTokenManager;
     private SSOClientConfig clientConfig;
 
     public SSOTokenClient(SSOClientConfig clientConfig, AbstractSSOTokenVerify ssoTokenManager) {
-        this.sessionKeyName = clientConfig.getSessionKeyName();
         this.clientConfig = clientConfig;
         this.ssoTokenManager = ssoTokenManager;
     }
