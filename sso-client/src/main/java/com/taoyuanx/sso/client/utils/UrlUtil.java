@@ -44,12 +44,12 @@ public class UrlUtil {
         }
         if (clientConfig.getSessionMode().equals(SSOClientConstant.SESSION_MODE_SERVER)) {
             if (clientConfig.isEnableCookie()) {
-                return verifyUrl(request, "");
+                return verifyUrl(request, clientConfig.getRedirectUrlSignKey(), clientConfig.getSessionKeyName());
             } else {
-                return verifyUrl(request, clientConfig.getSessionKeyName());
+                return verifyUrl(request, clientConfig.getRedirectUrlSignKey(), clientConfig.getSessionKeyName());
             }
         } else if (clientConfig.getSessionMode().equals(SSOClientConstant.SESSION_MODE_CLIENT)) {
-            return verifyUrl(request, SSOClientConstant.SSO_SESSION_TOKEN, SSOClientConstant.SSO_REFRESH_TOKEN, SSOClientConstant.SSO_TOKEN_EXPIRE);
+            return verifyUrl(request, clientConfig.getRedirectUrlSignKey(), SSOClientConstant.SSO_SESSION_TOKEN, SSOClientConstant.SSO_REFRESH_TOKEN, SSOClientConstant.SSO_TOKEN_EXPIRE);
         }
 
         return false;

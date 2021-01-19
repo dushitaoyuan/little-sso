@@ -35,19 +35,24 @@ public class UrlUtil {
     }
 
     public static String addParamAndSign(String url, String signKey, int expire, TimeUnit timeUnit, Map<String, String> signParam) {
-        HMacSign hMacSign = new HMacSign(signKey.getBytes());
-        Long end = System.currentTimeMillis() + timeUnit.toMillis(expire);
-        signParam.put(END_KEY, String.valueOf(end));
-        String signStr = signParam.entrySet().stream().sorted().map(key -> {
-            return signParam.get(key);
-        }).collect(Collectors.joining(","));
-        String sign = Base64.encodeBase64URLSafeString(hMacSign.sign(signStr.getBytes()));
-        signParam.put(SIGN_KEY, sign);
+        if (HelperUtil.isNotEmpty(signKey)) {
+            HMacSign hMacSign = new HMacSign(signKey.getBytes());
+            Long end = System.currentTimeMillis() + timeUnit.toMillis(expire);
+            signParam.put(END_KEY, String.valueOf(end));
+            String signStr = signParam.keySet().stream().sorted().map(key -> {
+                return signParam.get(key);
+            }).collect(Collectors.joining(","));
+            String sign = Base64.encodeBase64URLSafeString(hMacSign.sign(signStr.getBytes()));
+            signParam.put(SIGN_KEY, sign);
+        }
         return addParamToUrl(url, signParam);
 
     }
 
     public static boolean verifyUrl(HttpServletRequest request, String signKey, String... signParamKey) {
+        if (HelperUtil.isEmpty(signKey)) {
+            return true;
+        }
         String end = request.getParameter(END_KEY);
         String sign = request.getParameter(SIGN_KEY);
         if (HelperUtil.isEmpty(sign) || HelperUtil.isEmpty(end)) {

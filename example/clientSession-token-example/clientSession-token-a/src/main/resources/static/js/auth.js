@@ -3,7 +3,7 @@ var webCache = new WebCache();
 
 var ssoConfig = {
     tokenRefreshUrl: '/appA/refresh',
-    appBUrl: "http://localhost:8082/appB?"
+    appBUrl: "http://localhost:8082/appB/index"
 }
 
 
@@ -87,7 +87,7 @@ function autoRefresh() {
     }
     $.ajax({
         method: "get",
-        url: ssoConfig.appBUrl,
+        url: ssoConfig.tokenRefreshUrl,
         headers: {'refreshToken': refreshToken},
         async: false,
         dataType: 'json',

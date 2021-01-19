@@ -56,6 +56,9 @@ public class SSOLoginController {
     SSOProperties ssoProperties;
 
 
+    private static Integer URL_EXPIRE_TIME_MINUTES=15;
+
+
     @GetMapping("login")
     public ModelAndView login(String redirectUrl, HttpServletRequest request, HttpServletResponse response) {
         ModelAndView modelAndView = new ModelAndView();
@@ -151,7 +154,7 @@ public class SSOLoginController {
         Map<String, String> urlParamMap = new HashMap<>();
         urlParamMap.put(ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
         String redirectUrlWithSessionId = UrlUtil.addParamAndSign(loginUserVo.getRedirectUrl(),
-                ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                ssoProperties.getRedirectUrlSignKey(), URL_EXPIRE_TIME_MINUTES, TimeUnit.MINUTES,
                 urlParamMap);
         loginUserVo.setRedirectUrl(redirectUrlWithSessionId);
         CookieUtil.addCookie(response, ssoProperties.getSessionKeyName(), loginUserVo.getSessionId(), ssoProperties.getSessionIdCookieDomain(), ssoProperties.getSessionTimeOut() * 60, SSOConst.SSO_COOKIE_PATH);
@@ -165,7 +168,7 @@ public class SSOLoginController {
         Map<String, String> urlParamMap = new HashMap<>();
         urlParamMap.put(ssoProperties.getSessionKeyName(), loginUserVo.getSessionId());
         String redirectUrlWithSessionId = UrlUtil.addParamAndSign(loginUserVo.getRedirectUrl(),
-                ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                ssoProperties.getRedirectUrlSignKey(), URL_EXPIRE_TIME_MINUTES, TimeUnit.MINUTES,
                 urlParamMap);
         loginUserVo.setRedirectUrl(redirectUrlWithSessionId);
     }
@@ -184,7 +187,7 @@ public class SSOLoginController {
             urlParamMap.put(SSOConst.SSO_REFRESH_TOKEN, ssoTokenUser.getRefreshToken());
             urlParamMap.put(SSOConst.SSO_TOKEN_EXPIRE, String.valueOf(ssoTokenUser.getExpire()));
             redirectUrl = UrlUtil.addParamAndSign(redirectUrl,
-                    ssoProperties.getRedirectUrlSignKey(), 15, TimeUnit.MINUTES,
+                    ssoProperties.getRedirectUrlSignKey(), URL_EXPIRE_TIME_MINUTES, TimeUnit.MINUTES,
                     urlParamMap);
             Map loginResult = new HashMap<>();
             loginResult.put(SSOConst.SSO_REDIRECT_URL, redirectUrl);

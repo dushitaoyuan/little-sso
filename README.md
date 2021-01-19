@@ -38,11 +38,12 @@ noCookie-example 不基于cookie的sso系统,服务端存储session
 
 clientSession-token-example 基于token的sso系统,服务端不存储session,client端存储session  
 
-
 ## 总体设计
+
+![design](doc/img/design.png)
 
 ###  登录流程
 
-
+![design](doc/img/login.png)
 
 ### 退出流程

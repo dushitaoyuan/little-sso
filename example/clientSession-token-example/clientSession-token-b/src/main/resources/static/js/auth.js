@@ -2,7 +2,7 @@ var webCache = new WebCache();
 
 var ssoConfig = {
     tokenRefreshUrl: '/appB/refresh',
-    appAUrl: "http://localhost:8081/appA?"
+    appAUrl: "http://localhost:8081/appA/index"
 }
 
 /**

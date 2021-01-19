@@ -85,7 +85,7 @@ username:<h1 style="color: green" th:text="${ssoUser.username}"></h1>
 
     function toAppA() {
         autoRefresh();
-        var toUrl = ssoConfig.appAUrl + "sessionToken=" + webCache.get('sessionToken') + "&refreshToken=" + webCache.get('refreshToken') + '&expire=' + webCache.getExpire('sessionToken')
+        var toUrl = ssoConfig.appAUrl + "?sessionToken=" + webCache.get('sessionToken');
         window.location.href = toUrl;
     }
 </script>

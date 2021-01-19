@@ -49,7 +49,15 @@ public class MyClientController {
         model.addAttribute("expire", expire);
         return "index";
     }
-
+    @GetMapping("index")
+    public String index(HttpServletRequest request, Model model) {
+        /**
+         * not verify
+         */
+        SSOUser ssoUser = ssoTokenClient.getSSOUser(ssoTokenClient.getSessionToken(request));
+        model.addAttribute("ssoUser", ssoUser);
+        return "index";
+    }
     @GetMapping("user")
     @ResponseBody
     public SSOUser mySSoUser(HttpServletRequest request) {
