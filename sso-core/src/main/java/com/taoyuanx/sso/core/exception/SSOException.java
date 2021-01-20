@@ -5,6 +5,7 @@ package com.taoyuanx.sso.core.exception;
  * @author dushitaoyuan
  */
 public class SSOException extends RuntimeException {
+
     public SSOException() {
     }
 

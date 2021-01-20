@@ -56,7 +56,7 @@ public class SSOServerApiController {
         String sessionId = request.getParameter(ssoProperties.getSessionKeyName());
         try {
             if (!sessionManager.isLogin(sessionId)) {
-                return ResultBuilder.failed(SSOConst.LOGIN_CHECK_FAILED_CODE, "loginCheck false");
+                return ResultBuilder.failed(SSOConst.LOGIN_CHECK_FAILED_CODE, "not login");
             }
             return ResultBuilder.success();
         } catch (SessionIdInvalidException e) {

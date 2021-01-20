@@ -40,10 +40,155 @@ clientSession-token-example 基于token的sso系统,服务端不存储session,cl
 
 ## 总体设计
 
-![design](doc/img/design.png)
+![design](doc/img/sso-design.png)
 
-###  登录流程
+###  登录
 
-![design](doc/img/login.png)
+![login](doc/img/sso-login.png)
 
-### 退出流程
+### 退出
+
+![logout](doc/img/sso-logout.png)
+
+
+## 接口设计
+
+### sso-server 接口返回值包装
+
+<span style="color:red"> 备注: </span> **sso-server 所有json返回结果包装结构**
+
+Result:
+
+```json
+{
+	code: "消息码",
+	msg: "消息描述",
+	data: {},//真实返回值
+	ext: {} //扩展结果
+}
+```
+
+
+
+### sso-server 消息码
+
+| 消息码 | 描述                                 |
+| ------ | ------------------------------------ |
+| 1      | 成功                                 |
+| 0      | 失败                                 |
+| 500    | sso-server 服务异常,具体参见消息描述 |
+| 9999   | 登录检查失败                         |
+
+
+
+### sso-server 接口
+####  登录接口
+
+- path
+
+    /sso/login POST 
+
+- 参数  
+
+   username=xxx,password=md5(xxx),redirectUrl=xxxx
+
+- 返回值
+
+  ```json
+  {
+   redirectUrl:'跳转地址'
+  }
+  ```
+
+  
+
+  
+
+  
+
+  
+
+#### 退出接口
+
+- path
+
+    /sso/logout GET
+
+- 参数  
+
+  sso_session_id(参数名称可配置)
+
+- 返回值 同 Result
+
+  
+
+#### 登录检查接口
+
+- path
+
+    /sso/loginCheck GET
+
+- 参数  
+
+   sso_session_id(参数名称可配置)
+
+- 返回值 同 Result
+
+  
+
+#### 用户信息接口
+
+- path
+
+    /sso/user GET
+
+- 参数  
+
+   sso_session_id(参数名称可配置)
+
+- 返回值(用户信息可执行扩展)
+
+```json
+     {
+      sessionId:'sessionId',
+      userId:'用户id',
+      username:'username'
+     }
+```
+
+#### clienSession模式的用户详情接口
+
+- path
+
+    /sso/token/userDetail GET
+
+- 参数  
+
+   sso_session_id(参数名称可配置)
+
+- 返回值 同 Result data 可执行填充详细信息
+
+
+
+
+
+#### clienSession模式 token续期接口
+
+- path
+
+  /sso/token/refresh POST
+
+- 参数  
+
+  refreshToken=xxx
+
+- 返回值 
+
+```json
+{
+    sessionToken:'会话token',
+    refreshToken:'续期token,过期时间长期sessionToken',
+    expire:'过期时间,单位秒'
+}
+```
+

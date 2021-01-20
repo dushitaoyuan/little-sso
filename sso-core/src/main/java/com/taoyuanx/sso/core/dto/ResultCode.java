@@ -16,7 +16,7 @@ public enum ResultCode {
     PARAM_ERROR(400, "参数异常"),
     TOO_MANY_REQUESTS(429, "请求被限制"),
     INTERNAL_SERVER_ERROR(500, "服务器内部错误"),
-    BUSSINESS_ERROR(1001, "业务异常");
+    BUSINESS_ERROR(1001, "业务异常");
     public int code;
     public String desc;
 
