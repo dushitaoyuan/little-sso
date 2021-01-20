@@ -192,3 +192,13 @@ Result:
 }
 ```
 
+
+
+
+
+## 如何编写自己的sso-server
+
+- 下载 little-sso项目
+- 根据自己的需求修改sso-server的相关接口,或直接引入 sso-core 自定义实现sso-server,注意同时修改sso-client
+- 或者只修改 sso-server的 UserService实现即可,对接自己的账户系统
+
