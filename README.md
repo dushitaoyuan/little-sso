@@ -193,6 +193,11 @@ Result:
 ```
 
 
+## 如何启动示例
+1. 初始化数据库,执行doc/sql/demo.sql,如果有必要,启动redis
+2. 修改配置
+3. 如果 sso.sessionMode=client 则分别启动clientSession-token-example下的子模块即可  
+如果 sso.sessionMode=server 则启动nocookie-example 或cookie-example 任何一个即可
 
 
 
@@ -201,4 +206,12 @@ Result:
 - 下载 little-sso项目
 - 根据自己的需求修改sso-server的相关接口,或直接引入 sso-core 自定义实现sso-server,注意同时修改sso-client
 - 或者只修改 sso-server的 UserService实现即可,对接自己的账户系统
+
+
+
+## 非java语言如何接入
+sso-server 提供了rest接口,非java语言接入,根据语言特性实现登录,退出拦截,并结合
+sso-api(/sso/logincheck,/sso/logout,/sso/user,/sso/token/userDetail,/sso/token/refresh)接口,实现与sso-server的通信
+
+
 
